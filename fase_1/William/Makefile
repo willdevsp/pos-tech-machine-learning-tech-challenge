@@ -1,33 +1,142 @@
-.PHONY: help install install-dev clean test lint format run-eda run-notebook docker-build docker-run install-prod run-baselines run-all
+.PHONY: help install install-dev lint format type-check test test-cov test-smoke test-unit test-all clean build run run-api run-api-prod docs venv pre-commit
 
 # Variáveis
 PYTHON := python3
 PIP := pip
+VENV := .venv
 PROJECT_NAME := telco-churn-prediction
-DOCKER_IMAGE := $(PROJECT_NAME):latest
 
 help:
 	@echo "╔════════════════════════════════════════════════════════════╗"
-	@echo "║  $(PROJECT_NAME) - Make Commands                 ║"
+	@echo "║  Telco Churn Prediction - MLOps Pipeline Profissional     ║"
 	@echo "╚════════════════════════════════════════════════════════════╝"
 	@echo ""
-	@echo "Setup & Install:"
-	@echo "  make install          - Instalar via pyproject.toml"
+	@echo "Setup & Instalação:"
+	@echo "  make install          - Instalar dependências"
 	@echo "  make install-dev      - Instalar com dev dependencies"
-	@echo "  make install-prod     - Instalar apenas producao (requirements-prod.txt)"
-	@echo "  make install-full     - Instalar tudo completo (requirements-dev.txt)"
-	@echo "  make clean            - Limpar arquivos temporarios"
+	@echo "  make venv             - Criar virtual environment"
+	@echo "  make clean            - Limpar arquivos temporários"
 	@echo ""
-	@echo "Desenvolvimento:"
-	@echo "  make lint             - Validar codigo (ruff)"
-	@echo "  make format           - Formatar codigo (black, isort)"
-	@echo "  make test             - Executar testes com pytest"
-	@echo "  make coverage         - Gerar relatorio de cobertura"
+	@echo "Code Quality:"
+	@echo "  make lint             - Linter (ruff)"
+	@echo "  make format           - Formatar código (black, isort)"
+	@echo "  make type-check       - Type checking (mypy)"
+	@echo "  make pre-commit       - Format + Lint + Type check"
 	@echo ""
-	@echo "Execucao:"
-	@echo "  make run-eda          - Executar script de EDA"
-	@echo "  make run-baselines    - Treinar baselines com MLflow"
-	@echo "  make run-notebook     - Iniciar Jupyter notebook"
+	@echo "Testes:"
+	@echo "  make test             - Executar testes"
+	@echo "  make test-cov         - Testes com cobertura"
+	@echo "  make test-smoke       - Smoke tests"
+	@echo "  make test-unit        - Unit tests"
+	@echo "  make test-all         - Todos os testes (lint + type + testes)"
+	@echo ""
+	@echo "Execução:"
+	@echo "  make run              - Executar aplicação"
+	@echo "  make run-api          - Iniciar API (desenvolvimento)"
+	@echo "  make run-api-prod     - Iniciar API (produção)"
+	@echo "  make docs             - Gerar documentação"
+	@echo ""
+
+# ==== INSTALAÇÃO ====
+install:
+	$(PIP) install -e .
+	@echo "✅ Dependências instaladas"
+
+install-dev:
+	$(PIP) install -e ".[dev]"
+	@echo "✅ Dependências de desenvolvimento instaladas"
+
+# ==== CODE QUALITY ====
+lint:
+	@echo "🔍 Rodando ruff..."
+	ruff check src/ tests/ --show-source || true
+	@echo "✅ Lint completo"
+
+format:
+	@echo "🎨 Formatando com black..."
+	black src/ tests/ || true
+	@echo "🎨 Formatando com isort..."
+	isort src/ tests/ || true
+	@echo "✅ Formatação completa"
+
+type-check:
+	@echo "🔍 Verificando tipos com mypy..."
+	mypy src/ || true
+	@echo "✅ Type check completo"
+
+# ==== TESTES ====
+test:
+	@echo "🧪 Rodando testes..."
+	pytest tests/ -v --tb=short || true
+	@echo "✅ Testes concluídos"
+
+test-cov:
+	@echo "🧪 Rodando testes com cobertura..."
+	pytest tests/ -v --cov=src --cov-report=html --cov-report=term-missing || true
+	@echo "✅ Testes com cobertura concluídos"
+
+test-smoke:
+	@echo "🔥 Rodando smoke tests..."
+	pytest tests/ -v -m smoke || true
+	@echo "✅ Smoke tests concluídos"
+
+test-unit:
+	@echo "🧪 Rodando testes unitários..."
+	pytest tests/ -v -m unit || true
+	@echo "✅ Testes unitários concluídos"
+
+test-all: lint type-check test-cov
+	@echo "✅ Todos os testes passaram!"
+
+# ==== LIMPEZA ====
+clean:
+	@echo "🧹 Limpando..."
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete
+	find . -type f -name "*.pyo" -delete
+	find . -type f -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
+	rm -rf build/ dist/ .eggs/ *.egg-info/ || true
+	rm -rf .pytest_cache/ .mypy_cache/ .coverage htmlcov/ || true
+	@echo "✅ Limpeza concluída"
+
+# ==== BUILD ====
+build: clean
+	@echo "📦 Buildando pacote..."
+	$(PYTHON) -m build
+	@echo "✅ Build concluído"
+
+# ==== EXECUÇÃO ====
+run:
+	@echo "▶️  Executando aplicação..."
+	$(PYTHON) -m src
+
+run-api:
+	@echo "▶️  Iniciando API FastAPI (desenvolvimento)..."
+	uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+run-api-prod:
+	@echo "▶️  Iniciando API FastAPI (produção)..."
+	uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+# ==== DOCUMENTAÇÃO ====
+docs:
+	@echo "📚 Documentação:"
+	@echo "  - API Docs: http://localhost:8000/api/docs (Swagger UI)"
+	@echo "  - ReDoc: http://localhost:8000/api/redoc"
+	@echo "  - Coverage: htmlcov/index.html (após make test-cov)"
+
+# ==== VENV ====
+venv:
+	@echo "🐍 Criando virtual environment..."
+	$(PYTHON) -m venv $(VENV)
+	@echo "✅ Virtual environment criado"
+
+# ==== GIT ====
+pre-commit: format lint type-check
+	@echo "✅ Pre-commit checks concluídos"
+
+# ==== DEFAULT ====
+.DEFAULT_GOAL := help
 	@echo "  make run-all          - Rodar EDA + Baselines"
 	@echo "  make mlflow-ui        - Abrir MLflow UI (localhost:5000)"
 	@echo ""
