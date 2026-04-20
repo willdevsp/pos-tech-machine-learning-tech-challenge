@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict, Union, List
 
 
 class TelcoDataPreprocessor:
@@ -27,6 +27,9 @@ class TelcoDataPreprocessor:
         self.random_state = random_state
         self.scaler = None
         self.feature_names = None
+        self.binary_columns = None
+        self.categorical_columns = None
+        self._fitted_for_inference = False
     
     def load_data(self, data_path: str) -> pd.DataFrame:
         """Carrega dataset CSV."""
@@ -66,11 +69,14 @@ class TelcoDataPreprocessor:
         """Codifica colunas binárias (Yes/No) em 1/0."""
         df = df.copy()
         
-        # Detectar colunas binárias
-        binary_cols = [
-            col for col in df.columns 
-            if df[col].dtype == 'object' and df[col].nunique() == 2
-        ]
+        # Usar colunas binárias pré-detectadas (para inferência) ou detectar automaticamente
+        if self.binary_columns is not None:
+            binary_cols = self.binary_columns
+        else:
+            binary_cols = [
+                col for col in df.columns 
+                if df[col].dtype == 'object' and df[col].nunique() == 2
+            ]
         
         # Mapeamento Yes/No -> 1/0
         for col in binary_cols:
@@ -89,11 +95,14 @@ class TelcoDataPreprocessor:
         """Aplica one-hot encoding em features categóricas com drop_first=True."""
         df = df.copy()
         
-        # Detectar colunas categóricas (excluindo numéricas e já codificadas)
-        categorical_cols = [
-            col for col in df.columns 
-            if df[col].dtype == 'object' and df[col].nunique() > 2
-        ]
+        # Usar colunas categóricas pré-detectadas (para inferência) ou detectar automaticamente
+        if self.categorical_columns is not None:
+            categorical_cols = self.categorical_columns
+        else:
+            categorical_cols = [
+                col for col in df.columns 
+                if df[col].dtype == 'object' and df[col].nunique() > 2
+            ]
         
         if categorical_cols:
             # One-hot encoding com drop_first=True para evitar multicolinearidade
@@ -165,6 +174,110 @@ class TelcoDataPreprocessor:
         
         return X_train_scaled, X_test_scaled, y_train, y_test
     
+    def fit_for_inference(self, data_path: str) -> None:
+        """Prepara preprocessador para uso em inferência.
+        
+        Carrega dataset, aplica encoding, e treina StandardScaler.
+        Deve ser chamado uma vez na inicialização da API.
+        
+        Args:
+            data_path: Caminho para o CSV processado
+        """
+        # 1. Carregar dados
+        df = self.load_data(data_path)
+        
+        # 2. Remover leakage
+        df = self.drop_leakage_columns(df)
+        
+        # 3. Extrair features (sem target)
+        X, _ = self.extract_target(df)
+        
+        # 4. Detectar e armazenar colunas binárias e categóricas
+        self.binary_columns = [
+            col for col in X.columns 
+            if X[col].dtype == 'object' and X[col].nunique() == 2
+        ]
+        self.categorical_columns = [
+            col for col in X.columns 
+            if X[col].dtype == 'object' and X[col].nunique() > 2
+        ]
+        
+        # 5. Codificar features
+        X = self.encode_binary_features(X)
+        X = self.encode_categorical_features(X)
+        
+        # 6. Armazenar nomes das features
+        self.feature_names = X.columns.tolist()
+        
+        # 7. Criar e treinar StandardScaler
+        self.scaler = StandardScaler()
+        self.scaler.fit(X)
+        
+        # 8. Marcar como preparado para inferência
+        self._fitted_for_inference = True
+        
+        print(f"[OK] Preprocessador preparado para inferência com {len(self.feature_names)} features")
+    
+    def transform_single(self, features_dict: Dict[str, Union[str, int, float]]) -> np.ndarray:
+        """Transforma dicionário de features em array 30D normalizado.
+        
+        Args:
+            features_dict: Dicionário com 19 features nomeadas
+            
+        Returns:
+            Array numpy (1, 30) normalizado e pronto para predição
+            
+        Raises:
+            ValueError: Se fit_for_inference() não foi chamado antes
+        """
+        if not self._fitted_for_inference:
+            raise ValueError("fit_for_inference() deve ser chamado antes de usar transform_single()")
+        
+        # 1. Criar DataFrame de 1 linha
+        df = pd.DataFrame([features_dict])
+        
+        # 2. Codificar
+        df = self.encode_binary_features(df)
+        df = self.encode_categorical_features(df)
+        
+        # 3. Reordenar colunas
+        df = df.reindex(columns=self.feature_names, fill_value=0)
+        
+        # 4. Normalizar
+        X_scaled = self.scaler.transform(df)
+        
+        return X_scaled
+    
+    def transform_batch(self, features_list: List[Dict[str, Union[str, int, float]]]) -> np.ndarray:
+        """Transforma lista de dicionários em array 2D normalizado.
+        
+        Args:
+            features_list: Lista de dicionários com features nomeadas
+            
+        Returns:
+            Array numpy (n_samples, 30) normalizado
+            
+        Raises:
+            ValueError: Se fit_for_inference() não foi chamado antes
+        """
+        if not self._fitted_for_inference:
+            raise ValueError("fit_for_inference() deve ser chamado antes de usar transform_batch()")
+        
+        # 1. Criar DataFrame a partir da lista
+        df = pd.DataFrame(features_list)
+        
+        # 2. Codificar
+        df = self.encode_binary_features(df)
+        df = self.encode_categorical_features(df)
+        
+        # 3. Reordenar colunas
+        df = df.reindex(columns=self.feature_names, fill_value=0)
+        
+        # 4. Normalizar
+        X_scaled = self.scaler.transform(df)
+        
+        return X_scaled
+
     def inverse_transform_features(self, X_scaled: np.ndarray) -> np.ndarray:
         """Inverte normalização."""
         if self.scaler is None:
