@@ -7,7 +7,7 @@ import os
 
 @dataclass
 class DataConfig:
-    """Configurações de dados."""
+    """Configuração de caminhos, divisão treino/teste e colunas para remover."""
     
     raw_data_path: str = "data/raw/telco_churn_processed.csv"
     processed_data_path: str = "data/processed/telco_churn_processed.csv"
@@ -30,7 +30,7 @@ class DataConfig:
 
 @dataclass
 class ModelConfig:
-    """Configurações de modelo."""
+    """Configuração de arquitetura MLP e hiperparâmetros de treinamento."""
     
     # Arquitetura MLP
     input_size: int = None  # Definido dinamicamente
@@ -55,7 +55,7 @@ class ModelConfig:
 
 @dataclass
 class MetricsConfig:
-    """Configurações de métricas de negócio."""
+    """Configuração de métricas de negócio (custo/benefício de churn)."""
     
     customer_ltv: float = 2080.0  # Lifetime Value em USD
     retention_cost: float = 50.0  # Custo de retenção por cliente

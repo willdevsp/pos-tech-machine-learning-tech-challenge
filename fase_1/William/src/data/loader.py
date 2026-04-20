@@ -51,6 +51,8 @@ class TelcoDataLoader:
         ]
 
         X = self.df.drop(columns=drop_cols + ['Churn Value'])
+        print(X.columns.tolist())
+        print(X.head(1).to_dict(orient='records')[0])
         y = self.df['Churn Value']
 
         print(f"[OK] Features selecionadas: {X.shape[1]}")

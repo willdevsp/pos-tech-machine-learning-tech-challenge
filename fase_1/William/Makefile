@@ -1,4 +1,4 @@
-.PHONY: help install install-dev lint format type-check test test-cov test-smoke test-unit test-all clean build run run-api run-api-prod docs venv venv-activate pre-commit
+.PHONY: help install install-dev lint format type-check test test-cov test-smoke test-unit test-all clean build run run-api run-api-prod docs venv pre-commit
 
 # Variáveis
 PYTHON := python3
@@ -6,6 +6,7 @@ PIP := pip
 VENV := .venv
 PROJECT_NAME := telco-churn-prediction
 
+# ==== HELP ====
 help:
 	@echo "╔════════════════════════════════════════════════════════════╗"
 	@echo "║  Telco Churn Prediction - MLOps Pipeline Profissional     ║"
@@ -14,8 +15,7 @@ help:
 	@echo "Setup & Instalação:"
 	@echo "  make install          - Instalar dependências"
 	@echo "  make install-dev      - Instalar com dev dependencies"
-	@echo "  make venv             - Criar virtual environment"
-	@echo "  make venv-activate    - Ativar virtual environment"	
+	@echo "  make venv             - Criar virtual environment"	
 	@echo "  make clean            - Limpar arquivos temporários"
 	@echo ""
 	@echo "Code Quality:"
@@ -119,11 +119,6 @@ venv:
 	@echo "🐍 Criando virtual environment..."
 	$(PYTHON) -m venv $(VENV)	
 	@echo "✅ Virtual environment criado"
-	
-venv-activate:
-	source $(VENV)/Scripts/activate
-	@echo "✅ Ativado virtual environment"
-
 
 # ==== GIT ====
 pre-commit: format lint type-check

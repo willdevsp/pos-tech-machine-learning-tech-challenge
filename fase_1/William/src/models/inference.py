@@ -1,15 +1,22 @@
-"""Classe de inferência para uso em produção."""
+"""Serviço de inferência e predição para uso em produção.
+
+Carrega pipeline treinado e fornece métodos para predição de churn
+em modo single ou batch."""
 
 import numpy as np
 import pickle
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 from .pipeline import TelcoPipeline
 from .transformers import *
 
 
 class PredictionService:
-    """Serviço de predição para produção."""
+    """Serviço de predição de churn.
+    
+    Carrega pipeline treinado (sklearn Pipeline com StandardScaler + classificador)
+    e fornece métodos para predição single e batch com suporte a probabilidades.
+    """
     
     def __init__(self, 
                  pipeline_path: str,
@@ -27,47 +34,50 @@ class PredictionService:
         self.scaler = None
         self.preprocessor = None
         
-        # Carregar pipeline
+        # Carregar pipeline treinado
         if Path(pipeline_path).exists():
             with open(pipeline_path, 'rb') as f:
                 self.pipeline = pickle.load(f)
-            print(f"✅ Pipeline carregado de {pipeline_path}")
+            print(f"[OK] Pipeline carregado de {pipeline_path}")
         else:
             raise FileNotFoundError(f"Pipeline não encontrado em {pipeline_path}")
         
-        # Carregar scaler se fornecido
+        # Carregar scaler adicional (se fornecido)
         if scaler_path and Path(scaler_path).exists():
             with open(scaler_path, 'rb') as f:
                 self.scaler = pickle.load(f)
-            print(f"✅ Scaler carregado de {scaler_path}")
+            print(f"[OK] Scaler carregado de {scaler_path}")
         
-        # Carregar preprocessor se fornecido
+        # Carregar preprocessor adicional (se fornecido)
         if preprocessor_path and Path(preprocessor_path).exists():
             with open(preprocessor_path, 'rb') as f:
                 self.preprocessor = pickle.load(f)
-            print(f"✅ Preprocessor carregado de {preprocessor_path}")
+            print(f"[OK] Preprocessor carregado de {preprocessor_path}")
     
     def preprocess(self, X: np.ndarray) -> np.ndarray:
-        """Aplica preprocessamento (se disponível)."""
+        """Aplica preprocessamento adicional (se disponível).
+        
+        Na maioria dos casos, o preprocessamento já foi feito no feature_transformer.
+        """
         if self.preprocessor is not None:
             return self.preprocessor.transform(X)
         return X
     
     def predict(self, X: np.ndarray, return_proba: bool = False) -> Union[np.ndarray, Dict]:
-        """
-        Faz predição.
+        """Prediz churn para amostras de entrada.
         
         Args:
-            X: Features de entrada
-            return_proba: Se True, retorna probabilidades também
+            X: Array (n_samples, n_features) com features codificadas e normalizadas
+            return_proba: Se True, retorna probabilidades e confiança
         
         Returns:
-            Predições ou dict com predições e probabilidades
+            predictions: Array com 0 (sem churn) ou 1 (com churn)
+            Se return_proba: Dict com predictions, probabilities e confidence
         """
-        # Preprocessar se necessário
+        # Aplicar preprocessamento se necessário
         X_processed = self.preprocess(X)
         
-        # Predições
+        # Realizar predição
         y_pred = self.pipeline.predict(X_processed)
         
         if return_proba:
@@ -81,7 +91,10 @@ class PredictionService:
         return y_pred
     
     def predict_batch(self, X: np.ndarray, batch_size: int = 1000) -> np.ndarray:
-        """Predição em lotes (útil para datasets grandes)."""
+        """Prediz churn em lotes para datasets grandes.
+        
+        Ûtil para processar muitos exemplos sem sobrecarregar memória.
+        """
         predictions = []
         
         for i in range(0, len(X), batch_size):
@@ -114,7 +127,11 @@ class PredictionService:
 
 
 class ModelRegistry:
-    """Registro de modelos treinados."""
+    """Registro centralizado de modelos treinados.
+    
+    Permite salvar, carregar e consultar versões de modelos com metadados
+    (métricas, data de treinamento, etc).
+    """
     
     def __init__(self, registry_dir: str = "models/registry"):
         self.registry_dir = Path(registry_dir)
@@ -125,17 +142,16 @@ class ModelRegistry:
                       version: str,
                       pipeline: TelcoPipeline,
                       metadata: Dict) -> str:
-        """
-        Registra modelo no registry.
+        """Registra modelo no registry com metadados.
         
         Args:
             model_name: Nome do modelo
             version: Versão (ex: "1.0.0")
-            pipeline: Pipeline treinado
-            metadata: Dict com informações do modelo (métricas, data, etc)
+            pipeline: Pipeline treinado (sklearn Pipeline)
+            metadata: Dict com métricas, data, notas, etc
         
         Returns:
-            Caminho do modelo registrado
+            Caminho do diretório do modelo registrado
         """
         model_dir = self.registry_dir / model_name / version
         model_dir.mkdir(parents=True, exist_ok=True)

@@ -1,4 +1,13 @@
-"""Preprocessamento de dados limpo e reprodutível."""
+"""Preprocessamento de dados reprodutível para Telco Churn.
+
+Orquesta todo o pipeline de preparação de dados:
+  1. Carregamento de CSV
+  2. Remoção de leakage + features irrelevantes
+  3. Codificação de features binárias (Yes/No -> 1/0)
+  4. Codificação de features categóricas (one-hot com drop_first)
+  5. Divisão treino/teste estratificada
+  6. Normalização com StandardScaler
+"""
 
 import pandas as pd
 import numpy as np
@@ -8,7 +17,11 @@ from typing import Tuple, Optional
 
 
 class TelcoDataPreprocessor:
-    """Preprocessa dados Telco Churn de forma reprodutível."""
+    """Preprocessa dados de churn de telecom.
+    
+    Implementa todo o pipeline de preparação que transforma dados brutos
+    em arrays numéricos padronizados prontos para ML.
+    """
     
     def __init__(self, random_state: int = 42):
         self.random_state = random_state
@@ -16,14 +29,14 @@ class TelcoDataPreprocessor:
         self.feature_names = None
     
     def load_data(self, data_path: str) -> pd.DataFrame:
-        """Carrega dados CSV."""
+        """Carrega dataset CSV."""
         df = pd.read_csv(data_path)
         print(f"[OK] Dataset carregado: {df.shape[0]} linhas × {df.shape[1]} colunas")
         return df
     
     def drop_leakage_columns(self, df: pd.DataFrame, 
                             drop_columns: Optional[list] = None) -> pd.DataFrame:
-        """Remove colunas com leakage ou não relevantes."""
+        """Remove colunas com leakage (churn label, reason, score, CLTV) e localização."""
         if drop_columns is None:
             drop_columns = [
                 'CustomerID', 'Count', 'Country', 'State', 'City', 'Zip Code',
@@ -39,7 +52,7 @@ class TelcoDataPreprocessor:
     
     def extract_target(self, df: pd.DataFrame, 
                       target_col: str = 'Churn Value') -> Tuple[pd.DataFrame, pd.Series]:
-        """Extrai target e features."""
+        """Separa target (Churn Value) das features (X, y)."""
         if target_col not in df.columns:
             raise ValueError(f"Coluna '{target_col}' não encontrada")
         
@@ -50,7 +63,7 @@ class TelcoDataPreprocessor:
         return X, y
     
     def encode_binary_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Codifica features binárias (Yes/No -> 1/0)."""
+        """Codifica colunas binárias (Yes/No) em 1/0."""
         df = df.copy()
         
         # Detectar colunas binárias
@@ -73,7 +86,7 @@ class TelcoDataPreprocessor:
         return df
     
     def encode_categorical_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """One-hot encode features categóricas."""
+        """Aplica one-hot encoding em features categóricas com drop_first=True."""
         df = df.copy()
         
         # Detectar colunas categóricas (excluindo numéricas e já codificadas)
@@ -136,6 +149,8 @@ class TelcoDataPreprocessor:
         # 4. Codificar features
         X = self.encode_binary_features(X)
         X = self.encode_categorical_features(X)
+
+        print(f"Features após codificação: {X.columns.tolist()}")
         
         # 5. Dividir dados
         X_train, X_test, y_train, y_test = self.split_data(X, y, test_size)

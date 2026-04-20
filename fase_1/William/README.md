@@ -1,11 +1,10 @@
-# 📞 Previsão de Churn - Rede Neural com PyTorch
+# 📞 Telco Churn Prediction - Sistema de ML End-to-End
 
-**Projeto de ML End-to-End**: Sistema de alerta precoce para identificar clientes com alto risco de cancelamento em uma operadora de telecomunicações.
+**Sistema profissional de alerta precoce para identificar clientes com alto risco de cancelamento em operadoras de telecomunicações.**
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
-[![MLflow](https://img.shields.io/badge/MLflow-2.10+-green.svg)](https://mlflow.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3+-orange.svg)](https://scikit-learn.org/)
 
 ---
 
@@ -14,86 +13,63 @@
 - [Visão Geral](#visão-geral)
 - [Quick Start](#quick-start)
 - [Estrutura do Projeto](#estrutura-do-projeto)
-- [Dados](#dados)
-- [Modelagem](#modelagem)
-- [API](#api)
-- [Monitoramento](#monitoramento)
-- [Contribuição](#contribuição)
+- [API Endpoints](#api-endpoints)
+- [Feature Reference](#feature-reference)
+- [Exemplos de Uso](#exemplos-de-uso)
+- [Instalação e Setup](#instalação-e-setup)
 
 ---
 
 ## 🎯 Visão Geral
 
 ### Proposta de Valor
-Implementar um **sistema de alerta precoce** que identifique clientes com alta propensão ao cancelamento, permitindo ações de retenção personalizadas antes do encerramento do contrato.
+Implementar um sistema de previsão de churn que identifique clientes com alta propensão ao cancelamento, permitindo ações de retenção personalizadas antes do encerramento do contrato.
 
-### Métricas de Sucesso
-
-| Métrica | Target | Status |
-|---------|--------|--------|
-| **F1-Score** | > 0.70 | 🚀 Em Desenvolvimento |
-| **AUC-ROC** | > 0.85 | 🚀 Em Desenvolvimento |
-| **Recall** | ≥ 0.80 | 🚀 Em Desenvolvimento |
-| **Latência API** | < 200ms | 🚀 Em Desenvolvimento |
-
-### Padrões Críticos Identificados (EDA)
+### Padrões Críticos Identificados
 
 ```
-🔴 ALTO CHURN:
-  • Contratos mês-a-mês: 42.71%
-  • Fibra Óptica: 41.89%
-  • Electronic Check Payment: 45.29%
+🔴 ALTO RISCO DE CHURN (40-45%):
+  • Contratos mês-a-mês
+  • Fibra Óptica (com altos custos)
+  • Pagamento por Cheque Eletrônico
+  • Novos clientes (< 6 meses)
 
-🟢 BAIXO CHURN:
-  • Contratos 2 anos: 2.83%
-  • Sem Internet: 7.40%
-  • Pagamento automático: ~16%
+🟢 BAIXO RISCO (< 10%):
+  • Contratos 2 anos
+  • Sem Internet
+  • Pagamento automático (cartão/transferência)
+  • Clientes leais (> 5 anos)
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Pré-requisitos
-- Python ≥ 3.10
-- pip ou conda
-- Git
-
-### 2. Clone o Repositório
+### 1. Clone e Setup
 ```bash
+# Clone o repositório
 git clone https://github.com/seu-user/telco-churn-prediction.git
 cd telco-churn-prediction
-```
 
-### 3. Setup do Ambiente
-```bash
 # Criar ambiente virtual
 python -m venv .venv
-
-# Ativar ambiente
 source .venv/bin/activate  # Linux/Mac
-# ou
-.venv\Scripts\activate  # Windows
+# ou .venv\Scripts\activate  # Windows
 
 # Instalar dependências
 pip install -e ".[dev]"
 ```
 
-### 4. Download dos Dados
+### 2. Rodar a API
 ```bash
-# Os dados já devem estar em: data/raw/Telco_customer_churn.xlsx
-# Se não estiverem, download em: https://www.kaggle.com/blastchar/telco-customer-churn
+uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 5. Executar EDA
-```bash
-cd notebooks
-jupyter notebook 01_eda_and_ml_canvas.ipynb
+A API estará disponível em: `http://localhost:8000`
 
-# Ou rodar script Python
-cd ..
-python 01_eda_analysis.py
-```
+### 3. Documentação Interativa
+- **Swagger UI**: `http://localhost:8000/api/docs`
+- **ReDoc**: `http://localhost:8000/api/redoc`
 
 ---
 
@@ -101,305 +77,325 @@ python 01_eda_analysis.py
 
 ```
 telco-churn-prediction/
-├── 📄 README.md                        # Este arquivo
-├── 📄 pyproject.toml                   # Dependências e config
-├── 📄 .gitignore                       # Arquivos ignorados
-├── 📄 Telco_customer_churn.xlsx        # Dataset original
 │
-├── 📁 data/
-│   ├── raw/                            # Dados brutos (não versionados)
-│   │   └── .gitkeep
-│   └── processed/                      # Dados processados
-│       └── telco_churn_processed.csv   # ✅ Dataset limpo
+├── src/                              # Código fonte
+│   ├── config.py                    # Configurações centralizadas
+│   ├── logging_config.py            # Logger estruturado
+│   │
+│   ├── api/                         # FastAPI Application
+│   │   ├── main.py                  # Endpoints (6 rotas)
+│   │   ├── schemas.py               # Modelos Pydantic
+│   │   └── feature_transformer.py   # Transformação de features
+│   │
+│   ├── data/                        # Data Processing
+│   │   ├── loader.py                # Carregamento de dados
+│   │   └── preprocessing.py         # TelcoDataPreprocessor
+│   │
+│   ├── models/                      # Machine Learning
+│   │   ├── pipeline.py              # TelcoPipeline (sklearn)
+│   │   ├── transformers.py          # Transformadores custom
+│   │   ├── baseline.py              # Experimentos MLflow
+│   │   └── inference.py             # PredictionService
+│   │
+│   └── evaluation/                  # Avaliação
+│       └── metrics.py               # Métricas técnicas + negócio
 │
-├── 📁 notebooks/
-│   ├── 01_eda_and_ml_canvas.ipynb      # ✅ EDA + ML Canvas
-│   ├── 02_baseline_models.ipynb        # 🚀 Baselines
-│   └── 03_neural_network.ipynb         # 🚀 MLP + PyTorch
+├── tests/                           # Testes automatizados
+│   ├── conftest.py                  # Fixtures pytest
+│   ├── test_config.py
+│   ├── test_models.py
+│   └── test_preprocessing.py
 │
-├── 📁 src/
-│   ├── __init__.py
-│   ├── data/
-│   │   ├── loader.py                   # Carregamento de dados
-│   │   └── preprocessing.py            # Pipeline de prep
-│   ├── models/
-│   │   ├── baseline.py                 # Modelos baseline
-│   │   └── neural_network.py           # MLP com PyTorch
-│   ├── evaluation/
-│   │   ├── metrics.py                  # Métricas customizadas
-│   │   └── fairness.py                 # Análise de viés
-│   └── api/
-│       ├── main.py                     # FastAPI app
-│       └── schemas.py                  # Pydantic models
+├── data/                            # Dados
+│   ├── raw/
+│   └── processed/
 │
-├── 📁 tests/
-│   ├── test_data.py                    # Testes de dados
-│   ├── test_models.py                  # Testes de modelos
-│   └── test_api.py                     # Testes da API
+├── notebooks/                       # Análises exploratórias
+│   └── 01_eda_and_ml_canvas.ipynb
 │
-├── 📁 docs/
-│   ├── ml_canvas.md                    # ✅ ML Canvas
-│   ├── RELATORIO_EDA.md                # ✅ Relatório EDA
-│   ├── MODEL_CARD.md                   # 🚀 Model Card
-│   └── DEPLOYMENT.md                   # 🚀 Guia deploy
+├── docs/                            # Documentação
+│   ├── DICIONARIO_DADOS.md
+│   ├── RELATORIO_EDA.md
+│   └── ml_canvas.md
 │
-├── 📁 models/
-│   ├── baseline_model.pkl              # 🚀 Baseline treinado
-│   ├── neural_network.pth              # 🚀 MLP treinado
-│   └── .gitkeep
-│
-└── 📁 .github/
-    └── workflows/
-        └── ml_pipeline.yml             # 🚀 CI/CD GitHub Actions
+├── pyproject.toml                   # Configuração do projeto
+├── Makefile                         # Comandos úteis
+└── README.md                        # Este arquivo
 ```
 
 ---
 
-## 📊 Dados
+## 🔌 API Endpoints
 
-### Dataset: IBM Telco Customer Churn
-
-| Propriedade | Valor |
-|-------------|-------|
-| **Registros** | 7,043 clientes |
-| **Variáveis** | 33 features |
-| **Target** | Churn (Yes/No) |
-| **Desbalanceamento** | 73.5% No / 26.5% Yes (razão 1:2.77) |
-| **Período** | Dados históricos |
-
-### variáveis Principais
-
-**Numéricas**:
-- `Tenure Months` (0-72): Meses como cliente
-- `Monthly Charges` ($18-$119): Fatura mensal
-- `Total Charges` ($0-$8685): Total gasto
-
-**Categóricas Críticas**:
-- `Contract`: Month-to-month / One year / Two year
-- `Internet Service`: DSL / Fiber optic / No
-- `Payment Method`: Electronic check / Bank transfer / Credit card / Mailed check
-- `Senior Citizen`: Yes / No
-- Outros: Phone Service, Tech Support, Online Security, etc.
-
-### Data Quality
-
-✅ **Limpeza Realizada**:
-- Conversão de `Total Charges` (string → float)
-- Tratamento de 11 NaNs em clientes novos
-- Validação de tipos de dados
-- Verificação de integridade referencial
-
----
-
-## 🤖 Modelagem
-
-### Etapas Planejadas
-
-#### ✅ Etapa 1: Entendimento (COMPLETO)
-- [x] ML Canvas
-- [x] EDA exploratória
-- [x] Análise de qualidade de dados
-- [x] Identificação de padrões
-
-#### 🚀 Etapa 2: Modelagem
-- [ ] Baselines (DummyClassifier, LogReg)
-- [ ] Rede Neural MLP (3 camadas)
-- [ ] Early Stopping + LR Scheduler
-- [ ] Comparação de modelos
-- [ ] MLflow tracking
-
-#### 🚀 Etapa 3: API e Engenharia
-- [ ] Refatoração modular
-- [ ] Pipeline sklearn
-- [ ] Testes automatizados
-- [ ] API FastAPI
-- [ ] Docker container
-
-#### 🚀 Etapa 4: Documentação
-- [ ] Model Card
-- [ ] Análise de Fairness
-- [ ] Plano de monitoramento
-- [ ] Apresentação STAR (video)
-
-### Modelos Planejados
-
-```python
-# Baselines
-1. DummyClassifier (strategy='stratified')
-2. LogisticRegression (sklearn)
-
-# Tree-based
-3. RandomForest (sklearn)
-4. XGBoost (xgboost)
-
-# Neural Network (Principal)
-5. MLP 3-layer (PyTorch)
-   - Input → Dense(128) → ReLU → Dropout(0.3)
-            → Dense(64) → ReLU → Dropout(0.3)
-            → Dense(32) → ReLU → Dropout(0.3)
-            → Dense(1) → Sigmoid
-   - Loss: BCEWithLogitsLoss (com class weights)
-   - Optimizer: Adam (LR=0.001)
-   - Early Stopping: validation loss (patience=20)
+### 1. Health Check
+```http
+GET /api/health
 ```
-
----
-
-## 🌐 API
-
-### Endpoints Planejados (Etapa 3)
-
-```bash
-# GET - Health check
-curl http://localhost:8000/health
-
-# POST - Prediction
-curl -X POST http://localhost:8000/predict \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tenure_months": 12,
-    "monthly_charges": 65.50,
-    "contract": "Month-to-month",
-    "internet_service": "Fiber optic",
-    "payment_method": "Electronic check"
-  }'
-
-# Response
+**Resposta:**
+```json
 {
-  "customer_id": "XXXX-YYYY",
-  "churn_probability": 0.78,
-  "churn_prediction": "Yes",
-  "confidence": 0.85,
-  "risk_level": "HIGH",
-  "recommended_actions": [
-    "Oferecer upgrade para contrato 2 anos",
-    "Investigar satisfação com Fibra",
-    "Converter para pagamento automático"
+  "status": "healthy",
+  "version": "0.1.0",
+  "model_loaded": true
+}
+```
+
+### 2. Obter Informações do Modelo
+```http
+GET /api/model-info
+```
+**Resposta:**
+```json
+{
+  "model_type": "XGBoost",
+  "model_version": "0.1.0",
+  "n_features": 30,
+  "features_used": ["Gender", "Senior Citizen", ...]
+}
+```
+
+### 3. Predição Individual
+```http
+POST /api/predict
+Content-Type: application/json
+```
+
+**Body:**
+```json
+{
+  "features": {
+    "Gender": "Male",
+    "Senior Citizen": "No",
+    "Partner": "No",
+    "Dependents": "No",
+    "Tenure Months": 2,
+    "Phone Service": "Yes",
+    "Multiple Lines": "No",
+    "Internet Service": "DSL",
+    "Online Security": "No",
+    "Online Backup": "No",
+    "Device Protection": "No",
+    "Tech Support": "No",
+    "Streaming TV": "No",
+    "Streaming Movies": "No",
+    "Contract": "Month-to-month",
+    "Paperless Billing": "Yes",
+    "Payment Method": "Mailed check",
+    "Monthly Charges": 53.85,
+    "Total Charges": 108.15
+  }
+}
+```
+
+**Resposta:**
+```json
+{
+  "prediction": 1,
+  "probability": 0.673,
+  "confidence": 0.673,
+  "processing_time_ms": 5.2
+}
+```
+
+### 4. Predição em Lote
+```http
+POST /api/predict-batch
+Content-Type: application/json
+```
+
+**Body:**
+```json
+{
+  "samples": [
+    { "features": { ... } },
+    { "features": { ... } },
+    { "features": { ... } }
   ],
-  "inference_time_ms": 45.2
+  "return_probabilities": true
+}
+```
+
+**Resposta:**
+```json
+{
+  "predictions": [1, 0, 1],
+  "probabilities": [0.673, 0.005, 0.521],
+  "batch_size": 3,
+  "processing_time_ms": 15.3
 }
 ```
 
 ---
 
-## 📈 Monitoramento
+## 📊 Feature Reference
 
-### Métricas Rastreadas (MLflow)
+### Features Binárias (Yes/No)
+Aceita: `"Yes"`, `"No"` (case-insensitive)
 
+- Senior Citizen
+- Partner
+- Dependents
+- Phone Service
+- Paperless Billing
+- Online Security
+- Online Backup
+- Device Protection
+- Tech Support
+- Streaming TV
+- Streaming Movies
+
+### Gender
+Aceita: `"Male"`, `"Female"` (case-insensitive)
+
+### Multiple Lines
+Aceita: `"Yes"`, `"No"`, `"No phone service"` (case-insensitive)
+
+### Internet Service
+Aceita: `"DSL"`, `"Fiber optic"`, `"No"` (case-insensitive)
+
+### Online Security / Online Backup / Device Protection / Tech Support / Streaming TV / Streaming Movies
+Aceita: `"Yes"`, `"No"`, `"No internet service"` (case-insensitive)
+
+### Contract
+Aceita: `"Month-to-month"`, `"One year"`, `"Two year"` (case-insensitive)
+
+### Payment Method
+Aceita: `"Bank transfer (automatic)"`, `"Credit card (automatic)"`, `"Electronic check"`, `"Mailed check"` (case-insensitive)
+
+### Numéricos
+- **Tenure Months** (int): 0-72+ (meses de contrato)
+- **Monthly Charges** (float): 0.00-150.00+ (dólares)
+- **Total Charges** (float): 0.00-10000.00+ (dólares)
+
+---
+
+## 💡 Exemplos de Uso
+
+### Cliente de ALTO RISCO (Churn = 1)
+```json
+{
+  "features": {
+    "Gender": "Male",
+    "Senior Citizen": "No",
+    "Partner": "No",
+    "Dependents": "No",
+    "Tenure Months": 2,
+    "Phone Service": "Yes",
+    "Multiple Lines": "No",
+    "Internet Service": "DSL",
+    "Online Security": "No",
+    "Online Backup": "No",
+    "Device Protection": "No",
+    "Tech Support": "No",
+    "Streaming TV": "No",
+    "Streaming Movies": "No",
+    "Contract": "Month-to-month",
+    "Paperless Billing": "Yes",
+    "Payment Method": "Mailed check",
+    "Monthly Charges": 53.85,
+    "Total Charges": 108.15
+  }
+}
 ```
-Experiments:
-  ├── Baseline
-  │   ├── DummyClassifier
-  │   └── LogisticRegression
-  ├── Tree Models
-  │   ├── RandomForest
-  │   └── XGBoost
-  └── Neural Networks
-      ├── MLP_v1 (64-32-16)
-      ├── MLP_v2 (128-64-32) ← Melhor
-      └── MLP_v3 (256-128-64)
+**Resposta esperada:** `prediction: 1`, `probability: 0.67`
 
-Métricas:
-  • F1-Score
-  • AUC-ROC
-  • Recall
-  • Precision
-  • Accuracy
-  • Tempo de treino
+### Cliente de BAIXO RISCO (Churn = 0)
+```json
+{
+  "features": {
+    "Gender": "Female",
+    "Senior Citizen": "No",
+    "Partner": "Yes",
+    "Dependents": "Yes",
+    "Tenure Months": 60,
+    "Phone Service": "Yes",
+    "Multiple Lines": "Yes",
+    "Internet Service": "DSL",
+    "Online Security": "Yes",
+    "Online Backup": "Yes",
+    "Device Protection": "Yes",
+    "Tech Support": "Yes",
+    "Streaming TV": "Yes",
+    "Streaming Movies": "Yes",
+    "Contract": "Two year",
+    "Paperless Billing": "No",
+    "Payment Method": "Bank transfer (automatic)",
+    "Monthly Charges": 89.50,
+    "Total Charges": 5370.00
+  }
+}
 ```
-
-### Análise de Fairness (Planejada)
-
-```python
-Grupos Sensíveis:
-  • Senior Citizen (Yes/No)
-  • Gender (M/F)
-  • Region (State)
-
-Métricas Fairness:
-  • Taxa de Seleção (Selection Rate Difference)
-  • Disparidade de Falso Negativo
-```
+**Resposta esperada:** `prediction: 0`, `probability: 0.005`
 
 ---
 
-## 🔧 Desenvolvimento
+## 🛠️ Instalação e Setup
 
-### Ambiente de Dev
+### Pré-requisitos
+- Python ≥ 3.10
+- pip ou conda
+- Git
 
-```bash
-# Instalar dependências de desenvolvimento
-pip install -e ".[dev]"
+### Passos de Instalação
 
-# Linting com ruff
-ruff check src/ tests/
-ruff format src/ tests/
+1. **Clone o repositório**
+   ```bash
+   git clone <repo-url>
+   cd telco-churn-prediction
+   ```
 
-# Type checking com mypy
-mypy src/
+2. **Crie ambiente virtual**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # Linux/Mac
+   .venv\Scripts\activate     # Windows
+   ```
 
-# Testes com pytest
-pytest tests/ -v --cov=src
+3. **Instale dependências**
+   ```bash
+   pip install -e ".[dev]"
+   ```
 
-# Executar notebook
-jupyter notebook notebooks/
-```
+4. **Configure variáveis de ambiente (opcional)**
+   ```bash
+   cp .env.example .env
+   # Edite .env conforme necessário
+   ```
 
-### Git Workflow
+5. **Prepare os dados**
+   ```bash
+   # Os dados devem estar em: data/processed/telco_churn_processed.csv
+   python 01_eda_analysis.py  # Executa EDA
+   ```
 
-```bash
-# Feature branch
-git checkout -b feature/seu-feature
+6. **Treine o modelo**
+   ```bash
+   python train_final_model.py
+   ```
 
-# Commit com mensagens claras
-git commit -m "feat: adiciona preprocessing module"
-
-# Push e PR
-git push origin feature/seu-feature
-```
-
----
-
-## 📝 Documentação
-
-- [ML Canvas](docs/ml_canvas.md) - Definição de negócio
-- [Relatório EDA](docs/RELATORIO_EDA.md) - Análise exploratória ✅
-- [Model Card](docs/MODEL_CARD.md) - Características do modelo 🚀
-- [Deployment Guide](docs/DEPLOYMENT.md) - Deploy em produção 🚀
-
----
-
-## 📚 Referências
-
-- [IBM Telco Dataset](https://www.kaggle.com/blastchar/telco-customer-churn)
-- [PyTorch Docs](https://pytorch.org/docs/stable/index.html)
-- [MLflow Guide](https://mlflow.org/docs/latest/index.html)
+7. **Inicie a API**
+   ```bash
+   uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+   ```
 
 ---
 
-## 📝 Licença
+## 📦 Dependências Principais
 
-MIT License - veja [LICENSE](LICENSE) para detalhes
+Ver `pyproject.toml` ou `requirements.txt` para lista completa:
 
----
-
-## 👥 Contribuidores
-
-| Nome | Role | Status |
-|------|------|--------|
-| Equipe de ML | Lead | ✅ Ativo |
-| Data Engineer | Suporte | ✅ Ativo |
+- **Dados**: pandas, numpy
+- **ML**: scikit-learn, xgboost
+- **API**: fastapi, pydantic, uvicorn
+- **Monitoramento**: mlflow
+- **Dev**: pytest, ruff, black
 
 ---
 
-## 📞 Contato & Suporte
+## 📞 Suporte
 
-- **Issues**: GitHub Issues
-- **Discussões**: GitHub Discussions
-- **Email**: ml@telecom.com
-- **Slack**: #ml-churn-prediction
+Para questões ou problemas, abra uma issue no repositório.
 
 ---
 
-**Last Updated**: Abril 2026  
-**Status**: 🟢 Etapas 1 & 2 Completas - Pronto para Etapa 2
+**Desenvolvido com ❤️ - Projeto FIAP MLOps**

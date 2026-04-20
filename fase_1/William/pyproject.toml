@@ -9,7 +9,7 @@ description = "Rede Neural para Previsão de Churn - MLOps Pipeline Profissional
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
-    {name = "Equipe de ML", email = "ml@telecom.com"}
+    {name = "Equipe de ML", email = "estudoswill@gmail.com"}
 ]
 license = {text = "MIT"}
 keywords = ["machine-learning", "churn-prediction", "pytorch", "mlops"]
@@ -35,6 +35,9 @@ dependencies = [
     "matplotlib>=3.8.0",
     "seaborn>=0.13.0",
     "openpyxl>=3.1.0",
+    "xgboost>=2.0.0",
+    "lightgbm>=4.0.0",
+    "imbalanced-learn>=0.12.0"
 ]
 
 [project.optional-dependencies]
@@ -47,12 +50,13 @@ dev = [
     "isort>=5.12.0",
     "jupyter>=1.0.0",
     "ipython>=8.16.0",
+    "fastapi[standard]>=0.112.0"
 ]
 
 ml = [
     "fairlearn>=0.10.0",
     "optuna>=3.14.0",
-    "shap>=0.43.0",
+    "shap>=0.43.0"    
 ]
 
 [project.urls]
@@ -110,20 +114,15 @@ exclude = [
 "__init__.py" = ["F401"]  # unused imports in __init__
 
 [tool.pytest.ini_options]
-minversion = "7.0"
+minversion = "7.4"
 testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-addopts = """
-    -v
-    --strict-markers
-    --tb=short
-    --cov=src
-    --cov-report=html
-    --cov-report=term-missing
-    --cov-report=xml
-"""
+addopts = "-ra --strict-markers --tb=short --cov=src --cov-report=html --cov-report=term-missing --cov-report=xml"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
 markers = [
     "unit: unit tests",
     "integration: integration tests",
@@ -167,6 +166,7 @@ omit = [
     "*/tests/*",
     "*/site-packages/*",
     "*/__init__.py",
+    "*/setup.py",
 ]
 
 [tool.coverage.report]
@@ -182,39 +182,8 @@ exclude_lines = [
 ]
 precision = 2
 show_missing = true
-target-version = ["py310", "py311", "py312"]
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | build
-  | dist
-  | docs
-)/
-'''
-
-[tool.ruff]
-line-length = 100
-target-version = "py310"
-select = [
-    "E",    # pycodestyle errors
-    "W",    # pycodestyle warnings
-    "F",    # pyflakes
-    "I",    # isort
-    "C",    # flake8-comprehensions
-    "B",    # flake8-bugbear
-]
-ignore = [
-    "E501",  # line too long (black handles this)
-    "B008",  # do not perform function calls in argument defaults
-    "C901",  # too complex
-]
+skip_empty = true
+skip_covered = false
 
 [tool.ruff.isort]
 known-first-party = ["src"]
@@ -224,47 +193,3 @@ force-grid-wrap = 0
 use-parentheses = true
 ensure-newline-before-comments = true
 line-length = 100
-
-[tool.mypy]
-python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
-check_untyped_defs = false
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-ignore_missing_imports = true
-
-[tool.pytest.ini_options]
-minversion = "7.4"
-testpaths = ["tests"]
-python_files = "test_*.py"
-python_classes = "Test*"
-python_functions = "test_*"
-addopts = "--strict-markers --tb=short -ra"
-filterwarnings = [
-    "ignore::DeprecationWarning",
-]
-
-[tool.coverage.run]
-source = ["src"]
-omit = [
-    "*/tests/*",
-    "*/__init__.py",
-    "*/setup.py",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-]
-precision = 2
-skip_empty = true
-skip_covered = false

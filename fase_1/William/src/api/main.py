@@ -18,6 +18,7 @@ from .schemas import (
     ErrorResponse,
     ModelInfoResponse,
 )
+from .feature_transformer import feature_transformer
 from src.models import PredictionService
 from src.config import get_config, APIConfig
 
@@ -70,9 +71,9 @@ def create_app(model_path: Optional[str] = None) -> FastAPI:
     if model_path:
         try:
             app.state.model_service = PredictionService(model_path)
-            logger.info(f"✅ Modelo carregado: {model_path}")
+            logger.info(f"[OK] Modelo carregado: {model_path}")
         except Exception as e:
-            logger.error(f"❌ Erro ao carregar modelo: {e}")
+            logger.error(f"[ERROR] Erro ao carregar modelo: {e}")
     
     # ============ HEALTH CHECK ============
     @app.get("/health", tags=["Health"])
@@ -98,7 +99,7 @@ def create_app(model_path: Optional[str] = None) -> FastAPI:
         Fazer predição de churn para um cliente.
         
         Args:
-            request: Features do cliente
+            request: Features nomeadas do cliente
         
         Returns:
             Predição com probabilidade e confiança
@@ -112,10 +113,12 @@ def create_app(model_path: Optional[str] = None) -> FastAPI:
         start_time = time.time()
         
         try:
-            # Converter para array numpy
-            X = np.array([request.features])
+            # Transformar dicionário de features para array ordenado
+            X = feature_transformer.transform(request.features)
             
-            # Predição
+            logger.info(f"Features transformadas shape: {X.shape}")
+            
+            # Realizar predição com/sem probabilidade
             if request.return_probability:
                 result = app.state.model_service.predict(X, return_proba=True)
                 pred_result = {
@@ -123,6 +126,7 @@ def create_app(model_path: Optional[str] = None) -> FastAPI:
                     'probability': float(result['probabilities'][0]),
                     'confidence': float(result['confidence'][0]),
                 }
+                logger.info(f"Predicton: {pred_result['prediction']}, Probability: {pred_result['probability']:.4f}")
             else:
                 pred = app.state.model_service.predict(X)
                 pred_result = {
@@ -138,6 +142,12 @@ def create_app(model_path: Optional[str] = None) -> FastAPI:
                 processing_time_ms=processing_time
             )
         
+        except ValueError as e:
+            logger.error(f"Erro na validação de features: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Erro ao validar features: {str(e)}"
+            )
         except Exception as e:
             logger.error(f"Erro na predição: {e}")
             raise HTTPException(
@@ -153,7 +163,7 @@ def create_app(model_path: Optional[str] = None) -> FastAPI:
         Fazer predições em lote.
         
         Args:
-            request: Lista de features
+            request: Lista de dicionários com features nomeadas
         
         Returns:
             Predições em lote
@@ -167,7 +177,8 @@ def create_app(model_path: Optional[str] = None) -> FastAPI:
         start_time = time.time()
         
         try:
-            X = np.array(request.samples)
+            # Transformar lista de dicionários para array ordenado
+            X = feature_transformer.transform_batch(request.samples)
             
             if request.return_probabilities:
                 result = app.state.model_service.predict(X, return_proba=True)
@@ -186,6 +197,12 @@ def create_app(model_path: Optional[str] = None) -> FastAPI:
                 processing_time_ms=processing_time
             )
         
+        except ValueError as e:
+            logger.error(f"Erro na validação de features: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Erro ao validar features: {str(e)}"
+            )
         except Exception as e:
             logger.error(f"Erro na predição em lote: {e}")
             raise HTTPException(
@@ -209,12 +226,12 @@ def create_app(model_path: Optional[str] = None) -> FastAPI:
                 detail="Modelo não foi carregado"
             )
         
-        # Retornar informações genéricas
+        # Retornar informações do modelo com 30 features
         return ModelInfoResponse(
             model_type="Logistic Regression / Random Forest / XGBoost",
             model_version="0.1.0",
-            n_features=17,  # Assumindo 17 features
-            features_used=[f"feature_{i}" for i in range(17)]
+            n_features=30,
+            features_used=feature_transformer.feature_order
         )
     
     # ============ ROOT ============
@@ -256,4 +273,4 @@ def create_app(model_path: Optional[str] = None) -> FastAPI:
 
 
 # Aplicação padrão
-app = create_app()
+app = create_app("models/best_model.pkl")
