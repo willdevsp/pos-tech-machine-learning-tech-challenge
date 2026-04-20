@@ -8,7 +8,7 @@ from .config import (
     LoggingConfig,
     get_config,
 )
-from .data import TelcoDataLoader, TelcoDataPreprocessor
+from .data import TelcoDataPreprocessor
 from .evaluation import TelcoMetrics
 from .models import BaselineExperiment
 
@@ -24,7 +24,6 @@ __all__ = [
     "LoggingConfig",
     "get_config",
     # Data
-    "TelcoDataLoader",
     "TelcoDataPreprocessor",
     # Evaluation
     "TelcoMetrics",
