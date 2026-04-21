@@ -150,7 +150,7 @@ GET /api/model-info
   "model_type": "XGBoost",
   "model_version": "0.1.0",
   "n_features": 30,
-  "features_used": ["Gender", "Senior Citizen", ...]
+  "features_used": ["gender", "senior_citizen", ...]
 }
 ```
 
@@ -164,25 +164,25 @@ Content-Type: application/json
 ```json
 {
   "features": {
-    "Gender": "Male",
-    "Senior Citizen": "No",
-    "Partner": "No",
-    "Dependents": "No",
-    "Tenure Months": 2,
-    "Phone Service": "Yes",
-    "Multiple Lines": "No",
-    "Internet Service": "DSL",
-    "Online Security": "No",
-    "Online Backup": "No",
-    "Device Protection": "No",
-    "Tech Support": "No",
-    "Streaming TV": "No",
-    "Streaming Movies": "No",
-    "Contract": "Month-to-month",
-    "Paperless Billing": "Yes",
-    "Payment Method": "Mailed check",
-    "Monthly Charges": 53.85,
-    "Total Charges": 108.15
+    "gender": "Male",
+    "senior_citizen": "No",
+    "partner": "No",
+    "dependents": "No",
+    "tenure_months": 2,
+    "phone_service": "Yes",
+    "multiple_lines": "No",
+    "internet_service": "DSL",
+    "online_security": "No",
+    "online_backup": "No",
+    "device_protection": "No",
+    "tech_support": "No",
+    "streaming_tv": "No",
+    "streaming_movies": "No",
+    "contract": "Month-to-month",
+    "paperless_billing": "Yes",
+    "payment_method": "Mailed check",
+    "monthly_charges": 53.85,
+    "total_charges": 108.15
   }
 }
 ```
@@ -232,40 +232,40 @@ Content-Type: application/json
 ### Features Binárias (Yes/No)
 Aceita: `"Yes"`, `"No"` (case-insensitive)
 
-- Senior Citizen
-- Partner
-- Dependents
-- Phone Service
-- Paperless Billing
-- Online Security
-- Online Backup
-- Device Protection
-- Tech Support
-- Streaming TV
-- Streaming Movies
+- senior_citizen
+- partner
+- dependents
+- phone_service
+- paperless_billing
+- online_security
+- online_backup
+- device_protection
+- tech_support
+- streaming_tv
+- streaming_movies
 
-### Gender
+### gender
 Aceita: `"Male"`, `"Female"` (case-insensitive)
 
-### Multiple Lines
+### multiple_lines
 Aceita: `"Yes"`, `"No"`, `"No phone service"` (case-insensitive)
 
-### Internet Service
+### internet_service
 Aceita: `"DSL"`, `"Fiber optic"`, `"No"` (case-insensitive)
 
-### Online Security / Online Backup / Device Protection / Tech Support / Streaming TV / Streaming Movies
+### online_security / online_backup / device_protection / tech_support / streaming_tv / streaming_movies
 Aceita: `"Yes"`, `"No"`, `"No internet service"` (case-insensitive)
 
-### Contract
+### contract
 Aceita: `"Month-to-month"`, `"One year"`, `"Two year"` (case-insensitive)
 
-### Payment Method
+### payment_method
 Aceita: `"Bank transfer (automatic)"`, `"Credit card (automatic)"`, `"Electronic check"`, `"Mailed check"` (case-insensitive)
 
 ### Numéricos
-- **Tenure Months** (int): 0-72+ (meses de contrato)
-- **Monthly Charges** (float): 0.00-150.00+ (dólares)
-- **Total Charges** (float): 0.00-10000.00+ (dólares)
+- **tenure_months** (int): 0-72+ (meses de contrato)
+- **monthly_charges** (float): 0.00-150.00+ (dólares)
+- **total_charges** (float): 0.00-10000.00+ (dólares)
 
 ---
 
@@ -275,25 +275,25 @@ Aceita: `"Bank transfer (automatic)"`, `"Credit card (automatic)"`, `"Electronic
 ```json
 {
   "features": {
-    "Gender": "Male",
-    "Senior Citizen": "No",
-    "Partner": "No",
-    "Dependents": "No",
-    "Tenure Months": 2,
-    "Phone Service": "Yes",
-    "Multiple Lines": "No",
-    "Internet Service": "DSL",
-    "Online Security": "No",
-    "Online Backup": "No",
-    "Device Protection": "No",
-    "Tech Support": "No",
-    "Streaming TV": "No",
-    "Streaming Movies": "No",
-    "Contract": "Month-to-month",
-    "Paperless Billing": "Yes",
-    "Payment Method": "Mailed check",
-    "Monthly Charges": 53.85,
-    "Total Charges": 108.15
+    "gender": "Male",
+    "senior_citizen": "No",
+    "partner": "No",
+    "dependents": "No",
+    "tenure_months": 2,
+    "phone_service": "Yes",
+    "multiple_lines": "No",
+    "internet_service": "DSL",
+    "online_security": "No",
+    "online_backup": "No",
+    "device_protection": "No",
+    "tech_support": "No",
+    "streaming_tv": "No",
+    "streaming_movies": "No",
+    "contract": "Month-to-month",
+    "paperless_billing": "Yes",
+    "payment_method": "Mailed check",
+    "monthly_charges": 53.85,
+    "total_charges": 108.15
   }
 }
 ```
@@ -303,25 +303,25 @@ Aceita: `"Bank transfer (automatic)"`, `"Credit card (automatic)"`, `"Electronic
 ```json
 {
   "features": {
-    "Gender": "Female",
-    "Senior Citizen": "No",
-    "Partner": "Yes",
-    "Dependents": "Yes",
-    "Tenure Months": 60,
-    "Phone Service": "Yes",
-    "Multiple Lines": "Yes",
-    "Internet Service": "DSL",
-    "Online Security": "Yes",
-    "Online Backup": "Yes",
-    "Device Protection": "Yes",
-    "Tech Support": "Yes",
-    "Streaming TV": "Yes",
-    "Streaming Movies": "Yes",
-    "Contract": "Two year",
-    "Paperless Billing": "No",
-    "Payment Method": "Bank transfer (automatic)",
-    "Monthly Charges": 89.50,
-    "Total Charges": 5370.00
+    "gender": "Female",
+    "senior_citizen": "No",
+    "partner": "Yes",
+    "dependents": "Yes",
+    "tenure_months": 60,
+    "phone_service": "Yes",
+    "multiple_lines": "Yes",
+    "internet_service": "DSL",
+    "online_security": "Yes",
+    "online_backup": "Yes",
+    "device_protection": "Yes",
+    "tech_support": "Yes",
+    "streaming_tv": "Yes",
+    "streaming_movies": "Yes",
+    "contract": "Two year",
+    "paperless_billing": "No",
+    "payment_method": "Bank transfer (automatic)",
+    "monthly_charges": 89.50,
+    "total_charges": 5370.00
   }
 }
 ```

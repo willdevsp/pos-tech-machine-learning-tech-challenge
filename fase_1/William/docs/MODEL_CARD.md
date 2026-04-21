@@ -91,37 +91,37 @@ Test Set:
 ### Features Utilizadas (19 após seleção)
 
 #### Demográficas (4)
-- `Gender` (Masculino/Feminino)
-- `Senior Citizen` (0/1)
-- `Partner` (Yes/No)
-- `Dependents` (Yes/No)
+- `gender` (Masculino/Feminino)
+- `senior_citizen` (0/1)
+- `partner` (Yes/No)
+- `dependents` (Yes/No)
 
 #### De Serviço (10)
-- `Tenure Months` (meses de contrato)
-- `Phone Service` (Yes/No)
-- `Multiple Lines` (categórica)
-- `Internet Service` (DSL/Fiber/No)
-- `Online Security` (categórica com 3 valores)
-- `Online Backup` (categórica)
-- `Device Protection` (categórica)
-- `Tech Support` (categórica)
-- `Streaming TV` (categórica)
-- `Streaming Movies` (categórica)
-- `Paperless Billing` (Yes/No)
+- `tenure_months` (meses de contrato)
+- `phone_service` (Yes/No)
+- `multiple_lines` (categórica)
+- `internet_service` (DSL/Fiber/No)
+- `online_security` (categórica com 3 valores)
+- `online_backup` (categórica)
+- `device_protection` (categórica)
+- `tech_support` (categórica)
+- `streaming_tv` (categórica)
+- `streaming_movies` (categórica)
+- `paperless_billing` (Yes/No)
 
 #### Comerciais (3)
-- `Monthly Charges` (contínua, $)
-- `Total Charges` (contínua, $)
-- `Contract` (Month-to-month/One year/Two year)
+- `monthly_charges` (contínua, $)
+- `total_charges` (contínua, $)
+- `contract` (Month-to-month/One year/Two year)
 
 #### Método de Pagamento (2)
-- `Payment Method` (categórica com 4 valores)
+- `payment_method` (categórica com 4 valores)
 - (feature encoding adicional)
 
 ### Pré-processamento Aplicado
 
 1. **Remoção de Leakage**: 13 features removidas (ID, serviços descontinuados)
-2. **Imputação**: Valores faltantes em `Total Charges` preenchidos com 0 (novos clientes)
+2. **Imputação**: Valores faltantes em `total_charges` preenchidos com 0 (novos clientes)
 3. **Encoding Binário**: Yes/No → 1/0
 4. **One-Hot Encoding**: Categorias com drop_first=True
 5. **Normalização**: StandardScaler (mean=0, std=1)
@@ -141,7 +141,7 @@ Test Set:
 
 **Insight**: Modelo tem melhor recall em month-to-month (maior risco real). Contratos de longa duração têm churn natural mais baixo.
 
-### Análise por Internet Service
+### Análise por internet_service
 
 | Tipo | Churn Rate | Recall | Precisão | N Amostras |
 |------|-----------|--------|----------|-----------|
@@ -314,7 +314,7 @@ Idade:
   - ≥65: 28.5% alertados
   - Diferença: 1.7% (aceitável, <5%)
 
-Renda (proxy via Total Charges):
+Renda (proxy via total_charges):
   - Baixa (<$2k): 29% alertados
   - Alta (>$5k): 25% alertados
   - Diferença: 4% (aceitável, <5%)

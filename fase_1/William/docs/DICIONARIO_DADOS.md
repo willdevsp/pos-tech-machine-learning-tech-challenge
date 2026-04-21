@@ -31,7 +31,7 @@
 - **Cheque de Qualidade**: Todos os valores = 1
 - **Insight**: Coluna redundante, apenas preenche espaço
 
-### 3. **Churn Value** (Duplicata de Churn Label)
+### 3. **churn_value** (Duplicata de Churn Label)
 - **Tipo**: Inteiro binário (0/1)
 - **Descrição**: Versão numérica de Churn Label
 - **Valores Possíveis**: [0 = No, 1 = Yes]
@@ -103,7 +103,7 @@
 
 ## 👥 DADOS DEMOGRÁFICOS
 
-### 11. **Gender**
+### 11. **gender**
 - **Tipo**: Categórico (Binário)
 - **Descrição**: Gênero do cliente
 - **Valores Possíveis**: ["Male", "Female"]
@@ -112,7 +112,7 @@
 - **Cheque de Qualidade**: Sem valores faltantes
 - **Insight**: Balanceado (sem viés);reco = verificar fairness por gênero
 
-### 12. **Senior Citizen**
+### 12. **senior_citizen**
 - **Tipo**: Binário (0/1)
 - **Descrição**: Se cliente é idoso (65+ anos assumed)
 - **Valores Possíveis**: [0 = Não idoso, 1 = Idoso]
@@ -121,7 +121,7 @@
 - **Cheque de Qualidade**: Sem faltantes
 - **Insight Churn**: Investigar se idosos têm churn diferente
 
-### 13. **Partner**
+### 13. **partner**
 - **Tipo**: Categórico (Binário)
 - **Descrição**: Se cliente tem parceiro/cônjuge
 - **Valores Possíveis**: ["Yes", "No"]
@@ -130,7 +130,7 @@
 - **Cheque de Qualidade**: Sem valores faltantes
 - **Insight Churn**: Clientes com parceiro podem ter churn mais baixo
 
-### 14. **Dependents**
+### 14. **dependents**
 - **Tipo**: Categórico (Binário)
 - **Descrição**: Se cliente tem dependentes (filhos, pais)
 - **Valores Possíveis**: ["Yes", "No"]
@@ -143,7 +143,7 @@
 
 ## 📱 CARACTERÍSTICAS DE SERVIÇO
 
-### 15. **Tenure Months**
+### 15. **tenure_months**
 - **Tipo**: Inteiro (0-72 meses)
 - **Descrição**: Meses desde que cliente é ativo
 - **Valores Possíveis**: [0, 1, 2, ..., 72]
@@ -158,7 +158,7 @@
   - Clientes antigos (60+ meses): ~3% churn
 - **Recomendação**: Usar como feature principal
 
-### 16. **Phone Service**
+### 16. **phone_service**
 - **Tipo**: Categórico
 - **Descrição**: Se cliente tem serviço de telefone
 - **Valores Possíveis**: ["Yes", "No"]
@@ -167,7 +167,7 @@
 - **Insight Churn**: Clientes sem telefone têm churn mais baixo (são casos edge)
 - **Nota**: Desbalanceado em favor de "Yes"
 
-### 17. **Multiple Lines**
+### 17. **multiple_lines**
 - **Tipo**: Categórico
 - **Descrição**: Se cliente tem múltiplas linhas telefônicas
 - **Valores Possíveis**: ["Yes", "No", "No phone service"]
@@ -176,7 +176,7 @@
 - **Insight Churn**: Clientes com múltiplas linhas = mais engajados = menos churn
 - **Nota**: 3 categorias (usar cuidado em codificação)
 
-### 18. **Internet Service**
+### 18. **internet_service**
 - **Tipo**: Categórico (3 valores)
 - **Descrição**: Tipo de serviço de internet
 - **Valores Possíveis**: ["DSL", "Fiber optic", "No"]
@@ -188,16 +188,16 @@
   - No Internet: **7.40% churn** 🟢 BAIXO
 - **Recomendação**: Feature IMPORTANTE para modelo
 
-### 19. **Online Security**
+### 19. **online_security**
 - **Tipo**: Categórico
 - **Descrição**: Se cliente tem serviço de segurança online
 - **Valores Possíveis**: ["Yes", "No", "No internet service"]
 - **Distribuição**: No: ~42% | Yes: ~29% | No internet: ~29%
 - **Uso em ML**: Feature categórica (One-Hot)
-- **Insight Churn**: Clientes com "Online Security" = menos churn (aumento de stickiness)
+- **Insight Churn**: Clientes com "online_security" = menos churn (aumento de stickiness)
 - **Nota**: 3 categorias
 
-### 20. **Online Backup**
+### 20. **online_backup**
 - **Tipo**: Categórico
 - **Descrição**: Se cliente tem serviço de backup online
 - **Valores Possíveis**: ["Yes", "No", "No internet service"]
@@ -206,7 +206,7 @@
 - **Insight Churn**: Com Backup = menos churn (agregação de serviços)
 - **Nota**: 3 categorias
 
-### 21. **Device Protection**
+### 21. **device_protection**
 - **Tipo**: Categórico
 - **Descrição**: Se cliente tem proteção de dispositivo
 - **Valores Possíveis**: ["Yes", "No", "No internet service"]
@@ -215,16 +215,16 @@
 - **Insight Churn**: Serviços adicionais = cliente mais comprometido = menos churn
 - **Nota**: 3 categorias
 
-### 22. **Tech Support**
+### 22. **tech_support**
 - **Tipo**: Categórico
 - **Descrição**: Se cliente tem suporte técnico
 - **Valores Possíveis**: ["Yes", "No", "No internet service"]
 - **Distribuição**: No: ~45% | Yes: ~23% | No internet: ~32%
 - **Uso em ML**: Feature categórica (One-Hot)
-- **Insight Churn**: Tech Support usage = satisfação com serviço = menos churn
+- **Insight Churn**: tech_support usage = satisfação com serviço = menos churn
 - **Nota**: 3 categorias
 
-### 23. **Streaming TV**
+### 23. **streaming_tv**
 - **Tipo**: Categórico
 - **Descrição**: Se cliente tem streaming de TV
 - **Valores Possíveis**: ["Yes", "No", "No internet service"]
@@ -233,20 +233,20 @@
 - **Insight Churn**: Streaming services = mais uso = menos churn
 - **Nota**: 3 categorias
 
-### 24. **Streaming Movies**
+### 24. **streaming_movies**
 - **Tipo**: Categórico
 - **Descrição**: Se cliente tem streaming de filmes
 - **Valores Possíveis**: ["Yes", "No", "No internet service"]
 - **Distribuição**: No: ~44% | Yes: ~25% | No internet: ~31%
 - **Uso em ML**: Feature categórica (One-Hot)
 - **Insight Churn**: Streaming usage = engajamento = menos churn
-- **Nota**: 3 categorias; correlacionado com Streaming TV
+- **Nota**: 3 categorias; correlacionado com streaming_tv
 
 ---
 
 ## 💼 DADOS DE NEGÓCIO
 
-### 25. **Contract**
+### 25. **contract**
 - **Tipo**: Categórico (3 valores)
 - **Descrição**: Tipo de contrato do cliente
 - **Valores Possíveis**: ["Month-to-month", "One year", "Two year"]
@@ -259,7 +259,7 @@
 - **Recomendação**: Feature **CRÍTICA** para modelo
 - **Impacto**: 15x diferença entre month-to-month e two year!
 
-### 26. **Paperless Billing**
+### 26. **paperless_billing**
 - **Tipo**: Categórico
 - **Descrição**: Se cliente usa faturamento digital (sem papel)
 - **Valores Possíveis**: ["Yes", "No"]
@@ -268,7 +268,7 @@
 - **Insight Churn**: Paperless = tech-savvy = pode ter outros padrões de engajamento
 - **Nota**: Balanceado
 
-### 27. **Payment Method**
+### 27. **payment_method**
 - **Tipo**: Categórico (4 valores)
 - **Descrição**: Método de pagamento preferido do cliente
 - **Valores Possíveis**: ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"]
@@ -288,7 +288,7 @@
 
 ---
 
-### 28. **Monthly Charges**
+### 28. **monthly_charges**
 - **Tipo**: Float (valor em $ USD)
 - **Descrição**: Fatura mensal do cliente
 - **Valores Possíveis**: [$18.25 - $118.75]
@@ -299,10 +299,10 @@
   - Mediana: $63.30
 - **Uso em ML**: Feature numérica contínua
 - **Cheque de Qualidade**: Sem valores faltantes, sem outliers óbvios
-- **Insight Churn**: Clientes com fatura ALTA têm... menos churn? (paradoxo - precisa investigar interação com Contract)
+- **Insight Churn**: Clientes com fatura ALTA têm... menos churn? (paradoxo - precisa investigar interação com contract)
 - **Nota**: Correlação com muitos serviços = clientes com mais valor
 
-### 29. **Total Charges**
+### 29. **total_charges**
 - **Tipo**: Float (valor acumulado em $ USD)
 - **Descrição**: Valor total já pago pelo cliente (histórico)
 - **Valores Possíveis**: [$0 - $8,684.80]
@@ -314,8 +314,8 @@
 - **Missing Values**: 11 valores faltantes (identificados como clientes com tenure=0)
 - **Tratamento**: Preenchidos com 0 (clientes novos não geraram cobranças)
 - **Uso em ML**: Feature numérica contínua
-- **Insight Churn**: Total Charges correlacionado com Tenure (quanto mais tempo, mais cobrado, menos churn)
-- **Eng. Feature**: Total Charges / Monthly Charges = Tenure (poderia derivar, mas temos Tenure direto)
+- **Insight Churn**: total_charges correlacionado com Tenure (quanto mais tempo, mais cobrado, menos churn)
+- **Eng. Feature**: total_charges / monthly_charges = Tenure (poderia derivar, mas temos Tenure direto)
 
 ---
 
@@ -349,7 +349,7 @@
 - **Tipo**: Float (valor em $ USD)
 - **Descrição**: Valor estimado do cliente ao longo da vida
 - **Valores Possíveis**: [$0 - $9,945.00]
-- **Distribuição**: Correlacionada com Total Charges + Contract length
+- **Distribuição**: Correlacionada com total_charges + contract length
 - **Uso em ML**: 🚫 EVITAR como feature
 - **Razão**: Derivada de Tenure + Charges (colinariedade)
 - **Uso Válido**: Apenas para análise de negócio (qual cliente é mais valioso)
@@ -385,9 +385,9 @@
 
 | Prioridade | Colunas | Razão |
 |-----------|---------|-------|
-| 🔴 CRÍTICA | Contract, Internet Service, Tenure Months, Payment Method | Correlação forte com churn (>30% diferença entre categorias) |
-| 🟡 IMPORTANTE | Monthly Charges, Total Charges, Multiple Lines, Tech Support, Streaming | Correlação média com churn (10-20% diferença) |
-| 🟢 ÚTIL | Gender, Senior Citizen, Partner, Dependents, Phone Service | Contextual demográfico (verificar fairness) |
+| 🔴 CRÍTICA | contract, internet_service, tenure_months, payment_method | Correlação forte com churn (>30% diferença entre categorias) |
+| 🟡 IMPORTANTE | monthly_charges, total_charges, multiple_lines, tech_support, Streaming | Correlação média com churn (10-20% diferença) |
+| 🟢 ÚTIL | gender, senior_citizen, partner, dependents, phone_service | Contextual demográfico (verificar fairness) |
 | ⚪ REMOVER | CustomerID, Count, Country, Zip Code, Lat Long | Sem variância ou redundância geográfica |
 | 🚫 NUNCA USE | Churn Score, CLTV, Churn Reason | Data leakage ou features derivadas |
 
@@ -395,17 +395,17 @@
 
 ```
 1. One-Hot Encoding (Categóricas):
-   - Gender, Senior Citizen, Partner, Dependents
-   - Phone Service, Multiple Lines, Internet Service
-   - Online Security, Online Backup, Device Protection, Tech Support
-   - Streaming TV, Streaming Movies
-   - Contract, Payment Method
-   - Paperless Billing
+   - gender, senior_citizen, partner, dependents
+   - phone_service, multiple_lines, internet_service
+   - online_security, online_backup, device_protection, tech_support
+   - streaming_tv, streaming_movies
+   - contract, payment_method
+   - paperless_billing
 
 2. StandardScaler (Numéricas):
-   - Tenure Months
-   - Monthly Charges  
-   - Total Charges
+   - tenure_months
+   - monthly_charges  
+   - total_charges
 
 3. Remover (Sem variância):
    - CustomerID (apenas ID)
@@ -413,7 +413,7 @@
    - Country (sempre USA)
    - Zip Code (muito cardinalidade alta)
    - Lat Long (formato ruim, use Latitude+Longitude se necessário)
-   - Churn Value (duplicata de Churn Label)
+   - churn_value (duplicata de Churn Label)
 
 4. Evitar/Remover (Data Leakage):
    - Churn Score (informa diretamente Y)
@@ -428,7 +428,7 @@
 - **Tamanho Dataset**: 7,043 registros × 33 colunas
 - **Target**: Churn Label (26.5% churn, 73.5% não-churn)
 - **Qualidade**: Excelente (99.85% completo)
-- **Features Core**: Tenure, Contract, Internet Service, Payment Method
+- **Features Core**: Tenure, contract, internet_service, payment_method
 - **Desafio Principal**: Desbalanceamento 1:2.77 (rebalancear com class_weight ou SMOTE)
 
 ---

@@ -55,8 +55,8 @@ class TelcoDataPreprocessor:
         return df
     
     def extract_target(self, df: pd.DataFrame, 
-                      target_col: str = 'Churn Value') -> Tuple[pd.DataFrame, pd.Series]:
-        """Separa target (Churn Value) das features (X, y)."""
+                      target_col: str = 'churn_value') -> Tuple[pd.DataFrame, pd.Series]:
+        """Separa target (churn_value) das features (X, y)."""
         if target_col not in df.columns:
             raise ValueError(f"Coluna '{target_col}' não encontrada")
         

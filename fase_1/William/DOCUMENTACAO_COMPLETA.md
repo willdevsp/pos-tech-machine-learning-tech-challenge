@@ -29,7 +29,7 @@
 - Informações básicas (Framework: PyTorch/XGBoost, Input: 19 features, Output: prob + classe)
 - Performance (Accuracy 79.7%, Precision 68%, Recall 66%, F1 0.67, AUC 0.844)
 - Comparação com baselines
-- Análise por segmento (Contrato, Internet Service, Tenure)
+- Análise por segmento (Contrato, internet_service, Tenure)
 - **Limitações identificadas**: Recall abaixo do target, desbalanceamento, sem dados temporais
 - **Vieses auditados**: Demográficos, tenure, contrato (LGPD compliant ✅)
 - Cenários de falha e respostas
@@ -81,22 +81,7 @@
 
 ---
 
-### 5. 📹 [Preparação para Vídeo 5min (MÉTODO STAR)](prepracao_video.md)
-**⚠️ NÃO COMMITADO - Arquivo local**  
-**Descrição**: Script estruturado para demo de 5 minutos  
-**Estrutura STAR**:
-- **Situation** (45s): Problema de churn (26.5%, $21k/trim perda)
-- **Task** (60s): 5 objetivos (80%+ precision, real-time+batch, <200ms, explicável, production-ready)
-- **Action** (2:30min): 4 fases de desenvolvimento (EDA, Modelagem, API/Deploy, Governance)
-- **Result** (45s): Números (F1 0.67, P95 <200ms), ROI 166x ($832k preservado)
-- **Materiais**: Slides, Demos, Talking Points, Checklist
-
-**Uso**: Preparação para apresentação a stakeholders  
-**Próximas Ações**: Gravação em vídeo (5 min, com captions)
-
----
-
-### 6. 🏭 [Plano Terraform AWS](docs/TERRAFORM_AWS_PLAN.md)
+### 5. 🏭 [Plano Terraform AWS](docs/TERRAFORM_AWS_PLAN.md)
 **Descrição**: Infrastructure as Code completo SEM SageMaker  
 **Componentes AWS**:
 - **VPC**: 3 subnets (2 públicas, 1 privada), security groups segregados

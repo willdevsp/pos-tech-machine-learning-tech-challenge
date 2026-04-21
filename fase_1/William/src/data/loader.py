@@ -38,20 +38,20 @@ class TelcoDataLoader:
         """
         Separa features e target.
 
-        Target: Churn Value (0 = Não Churn, 1 = Churn)
+        Target: churn_value (0 = Não Churn, 1 = Churn)
         """
         # Remover colunas não relevantes
         drop_cols = [
             'CustomerID', 'Count', 'Country', 'State', 'City', 'Zip Code',
             'Lat Long', 'Latitude', 'Longitude',  # Localização inútil
-            'Churn Label',  # Usar Churn Value em vez disso
+            'Churn Label',  # Usar churn_value em vez disso
             'Churn Reason',  # Razão subjetiva
             'CLTV',  # Leakage - correlacionado com churn
             'Churn Score',  # Leakage - score de churn externo
         ]
 
-        X = self.df.drop(columns=drop_cols + ['Churn Value'])
-        y = self.df['Churn Value']
+        X = self.df.drop(columns=drop_cols + ['churn_value'])
+        y = self.df['churn_value']
 
         print(f"[OK] Features selecionadas: {X.shape[1]}")
         print(f"  - Distribuicao de Churn: {y.value_counts().to_dict()}")

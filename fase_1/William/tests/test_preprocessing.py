@@ -111,7 +111,7 @@ class TestTelcoDataPreprocessor:
         preprocessor = TelcoDataPreprocessor()
         X, y = preprocessor.extract_target(sample_dataframe)
         
-        assert 'Churn Value' not in X.columns
+        assert 'churn_value' not in X.columns
         assert len(X) == len(y)
         assert len(X.columns) == len(sample_dataframe.columns) - 1
     
@@ -125,7 +125,7 @@ class TestTelcoDataPreprocessor:
     
     def test_split_data_stratification(self, sample_dataframe):
         """Testa que split mantém proporções de classe."""
-        X, y = sample_dataframe.drop('Churn Value', axis=1), sample_dataframe['Churn Value']
+        X, y = sample_dataframe.drop('churn_value', axis=1), sample_dataframe['churn_value']
         
         preprocessor = TelcoDataPreprocessor()
         X_train, X_test, y_train, y_test = preprocessor.split_data(X, y, test_size=0.25)

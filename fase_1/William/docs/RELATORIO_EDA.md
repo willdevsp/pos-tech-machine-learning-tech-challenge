@@ -50,12 +50,12 @@ Implementar um **sistema de alerta precoce** que identifique clientes com **alta
 ### Inspeção Inicial
 
 #### Tipos de Dados
-- **Numéricas**: 10 colunas (Tenure Months, Monthly Charges, Total Charges, etc.)
-- **Categóricas**: 23 colunas (Contract, Internet Service, Payment Method, etc.)
-- **Valores Faltantes**: Apenas 11 em `Total Charges` (clientes novos com tenure=0)
+- **Numéricas**: 10 colunas (tenure_months, monthly_charges, total_charges, etc.)
+- **Categóricas**: 23 colunas (contract, internet_service, payment_method, etc.)
+- **Valores Faltantes**: Apenas 11 em `total_charges` (clientes novos com tenure=0)
 
 #### Tratamento de Dados
-✅ **Coluna 'Total Charges'**: Originalmente em string  
+✅ **Coluna 'total_charges'**: Originalmente em string  
 → Convertida para float  
 → 11 valores NaN identificados (clientes novos)  
 → Preenchidos com 0 (clientes ainda não geraram cobranças)  
@@ -122,7 +122,7 @@ Bank transfer (automatic) →  16.71% CHURN  🟢 BAIXO
 
 ## 4️⃣ Análise de Variáveis Numéricas
 
-### Tenure Months (Meses de Permanência)
+### tenure_months (Meses de Permanência)
 
 ```
 Média:     32.37 meses
@@ -134,7 +134,7 @@ Std Dev:   24.56 (alta variabilidade)
 
 **Padrão**: Distribuição indica muitos clientes novos com alto churn imediato.
 
-### Monthly Charges ($)
+### monthly_charges ($)
 
 ```
 Média:     $64.76
@@ -146,7 +146,7 @@ Std Dev:   $30.09
 
 **Padrão**: Clientes mais caros tendem a ter maior churn (verificar correlação).
 
-### Total Charges ($)
+### total_charges ($)
 
 ```
 Média:     $2,279.73
@@ -181,13 +181,13 @@ Std Dev:   $2,266.79 (muito variável)
 
 ### Seleção de Features
 **Numéricas**:
-- Tenure Months, Monthly Charges, Total Charges
+- tenure_months, monthly_charges, total_charges
 
 **Categóricas Críticas** (por correlação com churn):
-- Contract (muito importante!)
-- Internet Service (muito importante!)
-- Payment Method (importante!)
-- Senior Citizen, Tech Support, Online Security, etc.
+- contract (muito importante!)
+- internet_service (muito importante!)
+- payment_method (importante!)
+- senior_citizen, tech_support, online_security, etc.
 
 ### Estratégia de Baseline
 1. **DummyClassifier** (baseline simples)

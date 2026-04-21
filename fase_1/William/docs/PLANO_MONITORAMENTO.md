@@ -178,11 +178,11 @@ Metrics Cached:
 
 ```yaml
 Monitoramento Semanal:
-  - Gender: % male/female (baseline vs atual)
-  - Senior Citizen: % ≥65 years (baseline vs atual)
+  - gender: % male/female (baseline vs atual)
+  - senior_citizen: % ≥65 years (baseline vs atual)
   - Tenure: median, p25, p75 (drift detection)
-  - Monthly Charges: median, std dev
-  - Contract Types: % distribution shift
+  - monthly_charges: median, std dev
+  - contract Types: % distribution shift
   
 Técnica: Kolmogorov-Smirnov Test
   - KL divergence < 0.05: OK

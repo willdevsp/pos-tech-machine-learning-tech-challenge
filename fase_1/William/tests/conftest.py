@@ -23,7 +23,7 @@ def sample_csv(tmp_data_dir):
         'tenure': [1, 12, 24, 36, 48],
         'monthly_charges': [50.0, 75.0, 100.0, 125.0, 150.0],
         'internet_service': ['Yes', 'No', 'Yes', 'Yes', 'No'],
-        'Churn Value': [0, 1, 0, 1, 0]
+        'churn_value': [0, 1, 0, 1, 0]
     })
     
     path = Path(tmp_data_dir) / "sample.csv"
@@ -72,7 +72,7 @@ def sample_dataframe():
         'monthly_charges': [50.0, 75.0, 100.0, 125.0],
         'internet_service': ['Yes', 'No', 'Yes', 'Yes'],
         'contract_type': ['Month-to-Month', 'One Year', 'Two Year', 'Month-to-Month'],
-        'Churn Value': [0, 1, 0, 1]
+        'churn_value': [0, 1, 0, 1]
     })
 
 
