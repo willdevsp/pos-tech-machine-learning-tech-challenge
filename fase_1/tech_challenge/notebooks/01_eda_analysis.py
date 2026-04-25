@@ -26,7 +26,7 @@ print("\n" + "="*100)
 print("📊 ETAPA 1 & 2: ML CANVAS + EXPLORAÇÃO DE DADOS (EDA)")
 print("="*100)
 
-file_path = "Telco_customer_churn.xlsx"
+file_path = "./data/raw/Telco_customer_churn.xlsx"
 
 if not os.path.exists(file_path):
     print(f"❌ Arquivo não encontrado: {file_path}")
