@@ -8,7 +8,7 @@ from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
-    roc_auc_score, 
+    roc_auc_score,
     average_precision_score,
     accuracy_score,
     precision_score,
@@ -33,10 +33,10 @@ class MLPWrapper(BaseEstimator, ClassifierMixin):
     Wrapper sklearn-compatível para MLP PyTorch.
     Permite usar MLP junto com sklearn Pipeline.
     """
-    
-    def __init__(self, input_size=19, hidden_sizes=None, 
-                 dropout_rates=None, epochs=100, 
-                 learning_rate=0.001, early_stopping_patience=10, 
+
+    def __init__(self, input_size=19, hidden_sizes=None,
+                 dropout_rates=None, epochs=100,
+                 learning_rate=0.001, early_stopping_patience=10,
                  batch_size=32, random_state=42):
         self.input_size = input_size
         self.hidden_sizes = hidden_sizes if hidden_sizes is not None else [128, 64, 32]
@@ -48,57 +48,57 @@ class MLPWrapper(BaseEstimator, ClassifierMixin):
         self.random_state = random_state
         self.model = None
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    
+
     def _build_network(self):
         """Constrói arquitetura MLP."""
         layers = []
         prev_size = self.input_size
-        
+
         for hidden_size, dropout_rate in zip(self.hidden_sizes, self.dropout_rates):
             layers.append(nn.Linear(prev_size, hidden_size))
             layers.append(nn.ReLU())
             if dropout_rate > 0:
                 layers.append(nn.Dropout(dropout_rate))
             prev_size = hidden_size
-        
+
         layers.append(nn.Linear(prev_size, 1))
         return nn.Sequential(*layers)
-    
+
     def fit(self, X, y):
         """Treina MLP com Early Stopping."""
         torch.manual_seed(self.random_state)
         np.random.seed(self.random_state)
-        
+
         # Preparar dados
         X_train, X_val, y_train, y_val = train_test_split(
             X, y, test_size=0.2, random_state=self.random_state, stratify=y
         )
-        
+
         X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
         y_train_tensor = torch.tensor(y_train.values if hasattr(y_train, 'values') else y_train, dtype=torch.long)
         X_val_tensor = torch.tensor(X_val, dtype=torch.float32)
         y_val_tensor = torch.tensor(y_val.values if hasattr(y_val, 'values') else y_val, dtype=torch.long)
-        
+
         train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
         val_dataset = TensorDataset(X_val_tensor, y_val_tensor)
-        
+
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
-        
+
         # Construir modelo
         self.model = self._build_network().to(self.device)
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        
+
         pos_weight = torch.tensor(
             np.sum(y_train == 0) / np.sum(y_train == 1),
             dtype=torch.float32
         ).to(self.device)
         criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
-        
+
         # Treinar com Early Stopping
         best_val_loss = float('inf')
         patience_counter = 0
-        
+
         for epoch in range(self.epochs):
             # Training
             self.model.train()
@@ -106,16 +106,16 @@ class MLPWrapper(BaseEstimator, ClassifierMixin):
             for X_batch, y_batch in train_loader:
                 X_batch = X_batch.to(self.device)
                 y_batch = y_batch.to(self.device).unsqueeze(1).float()
-                
+
                 optimizer.zero_grad()
                 logits = self.model(X_batch)
                 loss = criterion(logits, y_batch)
                 loss.backward()
                 optimizer.step()
                 train_loss += loss.item() * X_batch.size(0)
-            
+
             train_loss /= len(train_loader.dataset)
-            
+
             # Validation
             self.model.eval()
             val_loss = 0.0
@@ -126,21 +126,21 @@ class MLPWrapper(BaseEstimator, ClassifierMixin):
                     logits = self.model(X_batch)
                     loss = criterion(logits, y_batch)
                     val_loss += loss.item() * X_batch.size(0)
-            
+
             val_loss /= len(val_loader.dataset)
-            
+
             # Early Stopping
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 patience_counter = 0
             else:
                 patience_counter += 1
-            
+
             if patience_counter >= self.early_stopping_patience:
                 break
-        
+
         return self
-    
+
     def predict(self, X):
         """Prediz classes (0 ou 1)."""
         self.model.eval()
@@ -149,7 +149,7 @@ class MLPWrapper(BaseEstimator, ClassifierMixin):
             logits = self.model(X_tensor)
             proba = torch.sigmoid(logits).cpu().numpy().flatten()
         return (proba > 0.5).astype(int)
-    
+
     def predict_proba(self, X):
         """Retorna probabilidades para ambas classes."""
         self.model.eval()
@@ -159,7 +159,7 @@ class MLPWrapper(BaseEstimator, ClassifierMixin):
             proba_class_1 = torch.sigmoid(logits).cpu().numpy().flatten()
         proba_class_0 = 1 - proba_class_1
         return np.column_stack([proba_class_0, proba_class_1])
-    
+
     def get_params(self, deep=True):
         """Retorna parâmetros (compatível com sklearn)."""
         return {
@@ -172,7 +172,7 @@ class MLPWrapper(BaseEstimator, ClassifierMixin):
             'batch_size': self.batch_size,
             'random_state': self.random_state
         }
-    
+
     def set_params(self, **params):
         """Define parâmetros (compatível com sklearn)."""
         for key, value in params.items():
@@ -193,7 +193,7 @@ class BaselineExperiment:
         """
         # Criar pasta se não existir
         os.makedirs(mlflow_uri, exist_ok=True)
-        
+
         self.experiment_name = experiment_name
         self.mlflow_uri = mlflow_uri
         mlflow.set_tracking_uri(mlflow_uri)
@@ -204,12 +204,12 @@ class BaselineExperiment:
             exp_id = mlflow.create_experiment(experiment_name)
         else:
             exp_id = experiment.experiment_id
-        
+
         mlflow.set_experiment(experiment_name)
         self.resultados = {}
         self._modelos = {}  # Armazenar modelos treinados
 
-    def treinar_modelo(self, modelo, X_train, X_test, y_train, y_test, 
+    def treinar_modelo(self, modelo, X_train, X_test, y_train, y_test,
                       nome_modelo: str, X_train_modificado=None, y_train_modificado=None) -> Tuple:
         """
         Método genérico para treinar qualquer modelo.
@@ -230,7 +230,7 @@ class BaselineExperiment:
         # Encerrar run ativo se existir
         if mlflow.active_run():
             mlflow.end_run()
-        
+
         with mlflow.start_run(run_name=nome_modelo):
             # Usar dados modificados se fornecidos (ex: SMOTE)
             X_treino = X_train_modificado if X_train_modificado is not None else X_train
@@ -285,7 +285,7 @@ class BaselineExperiment:
                     'importance': modelo.feature_importances_
                 }).sort_values('importance', ascending=False)
 
-                mlflow.log_dict(feature_importance.to_dict(), 
+                mlflow.log_dict(feature_importance.to_dict(),
                               artifact_file="feature_importance.json")
 
                 print(f"  - Top 5 features (importância):")
@@ -308,13 +308,13 @@ class BaselineExperiment:
             # Registrar modelo
             mlflow.sklearn.log_model(modelo, artifact_path="model")
             self.resultados[nome_modelo] = metricas
-            
+
             # Armazenar modelo em memória para análise posterior
             self._modelos[nome_modelo] = modelo
 
             return modelo, metricas
 
-    def treinar_esteira_completa(self, X_train, X_test, y_train, y_test, 
+    def treinar_esteira_completa(self, X_train, X_test, y_train, y_test,
                                  include_tuning=False, n_iter_tuning=5, cv_tuning=3):
         """
         Treina todos os modelos em uma esteira usando método genérico.
@@ -335,7 +335,7 @@ class BaselineExperiment:
         # 1. DummyClassifier (most_frequent)
         print("\n[1/6] Treinando DummyClassifier (most_frequent)...")
         dummy_clf = DummyClassifier(strategy='most_frequent', random_state=42)
-        self.treinar_modelo(dummy_clf, X_train, X_test, y_train, y_test, 
+        self.treinar_modelo(dummy_clf, X_train, X_test, y_train, y_test,
                            nome_modelo="DummyClassifier-most_frequent")
 
         # 2. LogisticRegression (simples)
@@ -346,7 +346,7 @@ class BaselineExperiment:
 
         # 3. LogisticRegression (balanced)
         print("\n[3/6] Treinando LogisticRegression (balanced)...")
-        logreg_balanced = LogisticRegression(max_iter=1000, class_weight='balanced', 
+        logreg_balanced = LogisticRegression(max_iter=1000, class_weight='balanced',
                                             random_state=42, n_jobs=-1)
         self.treinar_modelo(logreg_balanced, X_train, X_test, y_train, y_test,
                            nome_modelo="LogisticRegression-balanced")
@@ -387,7 +387,7 @@ class BaselineExperiment:
 
         return self.comparar_baselines(self.resultados)
 
-    def _treinar_com_tuning_rf(self, X_train, X_test, y_train, y_test, 
+    def _treinar_com_tuning_rf(self, X_train, X_test, y_train, y_test,
                                n_iter=10, cv=3):
         """Treina RandomForest com tuning de hiperparâmetros."""
         with mlflow.start_run(run_name="RandomForestClassifier-Tuned"):
@@ -408,7 +408,7 @@ class BaselineExperiment:
             random_search.fit(X_train, y_train)
 
             best_model = random_search.best_estimator_
-            
+
             # Log dos melhores parâmetros
             for param_name, param_value in random_search.best_params_.items():
                 mlflow.log_param(f"best_{param_name}", param_value)
@@ -506,29 +506,29 @@ class BaselineExperiment:
 
         return df_comparacao
 
-    def treinar_esteira_controlada(self, X_train, X_test, y_train, y_test, 
+    def treinar_esteira_controlada(self, X_train, X_test, y_train, y_test,
                                   aplicar_scaling=True, include_mlp=True, include_xgb_tuned=False):
         """
         Treina modelos baseline em condições controladas (mesmos dados, mesmo scaling).
-        
+
         Args:
             X_train, X_test, y_train, y_test: Dados não-escalados
             aplicar_scaling: Se True, aplica StandardScaler
             include_mlp: Se True, inclui MLPWrapper na comparação
             include_xgb_tuned: Se True, inclui XGBoost com hiperparâmetros tuned
-            
+
         Returns:
             Tupla (DataFrame com modelos, scaler_object)
         """
-        
+
         # Encerrar qualquer run ativo
         if mlflow.active_run():
             mlflow.end_run()
-        
+
         # Limpar resultados anteriores
         self.resultados = {}
         self._modelos = {}  # Limpar modelos anteriores
-        
+
         # Preparar dados
         scaler = None
         if aplicar_scaling:
@@ -538,38 +538,38 @@ class BaselineExperiment:
             scaling_info = "com StandardScaler"
         else:
             scaling_info = "sem scaling"
-        
+
         print("\n" + "="*70)
         print("INICIANDO ESTEIRA CONTROLADA DE MODELOS")
         print(f"Scaling: {scaling_info}")
         print("="*70)
-        
+
         # Calcular número total de modelos
         num_modelos = 6  # Base: Dummy, 3x LogReg, RandomForest, XGBoost
         if include_mlp:
             num_modelos += 1
         if include_xgb_tuned:
             num_modelos += 1
-        
+
         # 1. DummyClassifier
         print("\n[1/7] Treinando DummyClassifier (most_frequent)...")
         dummy_clf = DummyClassifier(strategy='most_frequent', random_state=42)
-        self.treinar_modelo(dummy_clf, X_train, X_test, y_train, y_test, 
+        self.treinar_modelo(dummy_clf, X_train, X_test, y_train, y_test,
                            nome_modelo="DummyClassifier-most_frequent")
-        
+
         # 2. LogisticRegression (simples)
         print("\n[2/7] Treinando LogisticRegression (simples)...")
         logreg_clf = LogisticRegression(max_iter=1000, random_state=42, n_jobs=-1)
         self.treinar_modelo(logreg_clf, X_train, X_test, y_train, y_test,
                            nome_modelo="LogisticRegression-simples")
-        
+
         # 3. LogisticRegression (balanced)
         print("\n[3/7] Treinando LogisticRegression (balanced)...")
-        logreg_balanced = LogisticRegression(max_iter=1000, class_weight='balanced', 
+        logreg_balanced = LogisticRegression(max_iter=1000, class_weight='balanced',
                                             random_state=42, n_jobs=-1)
         self.treinar_modelo(logreg_balanced, X_train, X_test, y_train, y_test,
                            nome_modelo="LogisticRegression-balanced")
-        
+
         # 4. LogisticRegression (SMOTE)
         print("\n[4/7] Treinando LogisticRegression com SMOTE...")
         smote = SMOTE(random_state=42)
@@ -579,13 +579,13 @@ class BaselineExperiment:
                            nome_modelo="LogisticRegression-SMOTE",
                            X_train_modificado=X_train_smote,
                            y_train_modificado=y_train_smote)
-        
+
         # 5. RandomForest
         print("\n[5/7] Treinando RandomForestClassifier...")
         rf_clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
         self.treinar_modelo(rf_clf, X_train, X_test, y_train, y_test,
                            nome_modelo="RandomForestClassifier")
-        
+
         # 6. XGBoost
         print("\n[6/7] Treinando XGBoostClassifier...")
         xgb_clf = XGBClassifier(n_estimators=100, max_depth=5, learning_rate=0.1,
@@ -593,14 +593,14 @@ class BaselineExperiment:
                                eval_metric='logloss', n_jobs=-1)
         self.treinar_modelo(xgb_clf, X_train, X_test, y_train, y_test,
                            nome_modelo="XGBoostClassifier")
-        
+
         # 7. MLP (opcional)
         if include_mlp:
             print(f"\n[7/{num_modelos}] Treinando MLPWrapper (PyTorch)...")
             mlp_clf = MLPWrapper(input_size=X_train.shape[1], random_state=42)
             self.treinar_modelo(mlp_clf, X_train, X_test, y_train, y_test,
                                nome_modelo="MLPWrapper-PyTorch")
-        
+
         # 8. XGBoost Tuned (opcional)
         if include_xgb_tuned:
             model_idx = 8 if include_mlp else 7
@@ -620,7 +620,7 @@ class BaselineExperiment:
             )
             self.treinar_modelo(xgb_tuned, X_train, X_test, y_train, y_test,
                                nome_modelo="XGBoostClassifier-tuned")
-        
+
         # Retornar comparação e scaler
         df_resultados = self.comparar_baselines(self.resultados)
         return df_resultados, scaler

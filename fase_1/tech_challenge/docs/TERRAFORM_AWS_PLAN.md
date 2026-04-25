@@ -1,7 +1,7 @@
 # Plano de Deploy Terraform - AWS Sem SageMaker
 
-**Data**: 2026-04-19  
-**Versão**: 1.0  
+**Data**: 2026-04-19
+**Versão**: 1.0
 **Objetivo**: Deploy de produção com custo mínimo, SLA 99.9%, API pública
 
 ---
@@ -332,7 +332,7 @@ resource "aws_autoscaling_group" "app" {
   desired_capacity    = var.asg_desired     # 2
   health_check_type   = "ELB"
   health_check_grace_period = 300
-  
+
   launch_template {
     id      = aws_launch_template.app.id
     version = "$Latest"
@@ -418,7 +418,7 @@ resource "aws_lb_target_group" "app" {
   port        = 8000
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
-  
+
   health_check {
     healthy_threshold   = 2
     unhealthy_threshold = 3
@@ -503,7 +503,7 @@ resource "aws_db_instance" "main" {
   backup_window          = "03:00-04:00"
   maintenance_window     = "mon:04:00-mon:05:00"
   multi_az               = true  # High availability
-  
+
   enabled_cloudwatch_logs_exports = ["postgresql"]
 
   skip_final_snapshot = false
@@ -580,14 +580,14 @@ resource "aws_elasticache_cluster" "main" {
   num_cache_nodes      = 1
   parameter_group_name = "default.redis7"
   port                 = 6379
-  
+
   subnet_group_name          = aws_elasticache_subnet_group.main.name
   security_group_ids         = [aws_security_group.redis.id]
-  
+
   automatic_failover_enabled = false  # Not needed for single node
   at_rest_encryption_enabled = true
   transit_encryption_enabled = false  # Simplify for now
-  
+
   log_delivery_configuration {
     destination      = aws_cloudwatch_log_group.redis.name
     destination_type = "cloudwatch-logs"
@@ -1165,7 +1165,7 @@ terraform destroy -target=aws_lb.app
 
 ### Formas de Economizar
 1. Usar Spot instances (70% desconto) → -$60/mês
-2. Reserved instances (40% desconto) → -$50/mês  
+2. Reserved instances (40% desconto) → -$50/mês
 3. Reduzir retention RDS (7d → 3d) → -$10/mês
 4. S3 Intelligent Tiering → -$5/mês
 
@@ -1192,6 +1192,6 @@ terraform destroy -target=aws_lb.app
 
 ---
 
-**Status**: Ready for staging deployment  
-**Data**: 2026-04-19  
+**Status**: Ready for staging deployment
+**Data**: 2026-04-19
 **Versão**: 1.0

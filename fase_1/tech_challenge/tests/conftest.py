@@ -25,7 +25,7 @@ def sample_csv(tmp_data_dir):
         'internet_service': ['Yes', 'No', 'Yes', 'Yes', 'No'],
         'churn_value': [0, 1, 0, 1, 0]
     })
-    
+
     path = Path(tmp_data_dir) / "sample.csv"
     df.to_csv(path, index=False)
     return str(path)

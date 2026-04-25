@@ -1,7 +1,7 @@
 # Model Card - Telco Churn Prediction
 
-**Última Atualização**: 2026-04-21  
-**Versão do Modelo**: 1.0  
+**Última Atualização**: 2026-04-21
+**Versão do Modelo**: 1.0
 **Status**: Pronto para Deploy em Staging
 
 ---
@@ -41,8 +41,8 @@
 **Threshold = 0.5 (Produção Recomendada - Balanceado)**
 ```
                  Pred Não-Churn  Pred Churn
-Real Não-Churn          935           104  
-Real Churn               63           307  
+Real Não-Churn          935           104
+Real Churn               63           307
 
 Interpretação:
 - Recall: 307/370 = 82.97% (captura 83% dos churns)
@@ -260,7 +260,7 @@ Test Set:
 - Clientes antigos (48+ meses): Modelo com Recall=62%
 - **Diferença**: 84% - 62% = 22 pontos percentuais
 
-**Causa**: Clientes novos têm padrões de churn mais óbvios e previsíveis (tenure é feature forte).  
+**Causa**: Clientes novos têm padrões de churn mais óbvios e previsíveis (tenure é feature forte).
 **Status**: ✅ Aceitável - Reflete realidade, não viés discriminatório. Churn natural é realmente menor em clientes antigos.
 
 #### 3. Viés de Contrato
@@ -268,7 +268,7 @@ Test Set:
 - Two-year: Recall=62%, Churn Real=3%
 - **Diferença**: 86% - 62% = 24 pontos percentuais
 
-**Causa**: Two-year tem churn natural tão baixo (3%) que modelo com threshold 0.5 é conservador.  
+**Causa**: Two-year tem churn natural tão baixo (3%) que modelo com threshold 0.5 é conservador.
 **Status**: ✅ Aceitável - Reflete padrão real do negócio, não viés. Em produção, threshold 0.10 mitigaria isso.
 
 ---
@@ -276,23 +276,23 @@ Test Set:
 ### Cenários de Falha
 
 #### 1. Degradação de Performance
-**Trigger**: F1-Score < 0.60 em validação mensal  
-**Causa Provável**: Distribuição de features mudou (novo produto lançado, entrada em novo mercado)  
+**Trigger**: F1-Score < 0.60 em validação mensal
+**Causa Provável**: Distribuição de features mudou (novo produto lançado, entrada em novo mercado)
 **Resposta**: 1) Análise de drift, 2) Retraining prioritário, 3) Rollback a v0.9 temporariamente
 
 #### 2. Falso Positivo em Cascata
-**Cenário**: Modelo alertar 1.000 clientes de baixo risco como "alto risco"  
-**Trigger**: Precision < 50%  
+**Cenário**: Modelo alertar 1.000 clientes de baixo risco como "alto risco"
+**Trigger**: Precision < 50%
 **Resposta**: Aumentar threshold de 0.5 → 0.65, reduzir alertas até 600, investigar distribuição
 
 #### 3. Não Captura de Churn Real
-**Cenário**: 500 clientes saem sem alerta (Recall caiu para 40%)  
-**Trigger**: Alertas não cobertes > 5% do churn total  
+**Cenário**: 500 clientes saem sem alerta (Recall caiu para 40%)
+**Trigger**: Alertas não cobertes > 5% do churn total
 **Resposta**: Investigar "novo padrão de churn", possivelmente mudança competitiva no mercado
 
 #### 4. Falha de Integração
-**Cenário**: API fica offline, system retorna erro em 10% das predições  
-**Trigger**: Taxa de erro > 1%  
+**Cenário**: API fica offline, system retorna erro em 10% das predições
+**Trigger**: Taxa de erro > 1%
 **Resposta**: Fallback manual para scorecard simples (Tenure + Charges)
 
 ---

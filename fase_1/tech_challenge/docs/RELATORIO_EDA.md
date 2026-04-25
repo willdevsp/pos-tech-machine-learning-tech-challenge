@@ -1,7 +1,7 @@
 # 📊 Etapa 1 & 2: ML Canvas + Exploração de Dados (EDA)
 ## Previsão de Churn - Telecomunicações
 
-**Data**: Abril 2026  
+**Data**: Abril 2026
 **Status**: ✅ Completo - Etapas 1 e 2 Executadas
 
 ---
@@ -55,10 +55,10 @@ Implementar um **sistema de alerta precoce** que identifique clientes com **alta
 - **Valores Faltantes**: Apenas 11 em `total_charges` (clientes novos com tenure=0)
 
 #### Tratamento de Dados
-✅ **Coluna 'total_charges'**: Originalmente em string  
-→ Convertida para float  
-→ 11 valores NaN identificados (clientes novos)  
-→ Preenchidos com 0 (clientes ainda não geraram cobranças)  
+✅ **Coluna 'total_charges'**: Originalmente em string
+→ Convertida para float
+→ 11 valores NaN identificados (clientes novos)
+→ Preenchidos com 0 (clientes ainda não geraram cobranças)
 
 **Resultado**: Dataset limpo e pronto para modelagem
 
@@ -81,7 +81,7 @@ Implementar um **sistema de alerta precoce** que identifique clientes com **alta
 
 ```
 Month-to-month    →  42.71% CHURN  🔴 ALTO
-One year          →  11.27% CHURN  🟡 MÉDIO  
+One year          →  11.27% CHURN  🟡 MÉDIO
 Two year          →   2.83% CHURN  🟢 BAIXO
 ```
 
@@ -160,12 +160,12 @@ Std Dev:   $2,266.79 (muito variável)
 
 ## 5️⃣ Checklist de Data Readiness
 
-✅ **Volume**: 7,043 registros (suficiente para ML)  
-✅ **Limpeza**: Valores faltantes tratados  
-✅ **Tipos de Dados**: Corrigidos (string → float)  
-✅ **Distribuição**: Padrões claros de churn identificados  
-✅ **Integridade**: Nenhuma inconsistência lógica  
-✅ **Balance**: Desbalanceamento documentado (73.5% vs 26.5%)  
+✅ **Volume**: 7,043 registros (suficiente para ML)
+✅ **Limpeza**: Valores faltantes tratados
+✅ **Tipos de Dados**: Corrigidos (string → float)
+✅ **Distribuição**: Padrões claros de churn identificados
+✅ **Integridade**: Nenhuma inconsistência lógica
+✅ **Balance**: Desbalanceamento documentado (73.5% vs 26.5%)
 
 **Status**: 🟢 **PRONTO PARA MODELAGEM**
 
@@ -240,6 +240,6 @@ Os dados revelam **oportunidades claras de segmentação** para retenção:
 
 ---
 
-**Versão**: 1.0  
-**Data Conclusão**: Abril 2026  
+**Versão**: 1.0
+**Data Conclusão**: Abril 2026
 **Próxima Revisão**: Após Etapa 2

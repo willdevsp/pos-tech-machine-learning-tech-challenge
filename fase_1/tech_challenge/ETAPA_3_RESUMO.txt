@@ -29,12 +29,12 @@ PROXIMA: Etapa 3 (continuacao) - Tree-Based Models + MLP + Cross-Validation
    ✓ DummyClassifier (stratified)
      - AUC-ROC: 0.5163 (baseline minimo)
      - ROI: $256,240 (lucro mesmo com predicoes aleatorias)
-   
+
    ✓ LogisticRegression (balanced)
      - AUC-ROC: 1.0000 (perfeito no teste)
      - ROI: $897,600 (lucro maximo)
      - Feature dominante: #19 (coef = 5.89)
-   
+
    ✓ Arquivo: src/models/baseline.py (classe BaselineExperiment)
 
 4. MLFLOW TRACKING COMPLETO

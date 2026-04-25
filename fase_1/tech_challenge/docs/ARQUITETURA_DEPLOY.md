@@ -1,7 +1,7 @@
 # Arquitetura de Deploy - Telco Churn Prediction
 
-**Data**: 2026-04-19  
-**Versão**: 1.0  
+**Data**: 2026-04-19
+**Versão**: 1.0
 **Status**: Aprovado para Staging
 
 ---
@@ -186,8 +186,8 @@ Batch Pipeline (Executado noturno via Lambda):
          │ db.t3.small │       │ Artifacts   │      │ cache.t3    │
          │ 100GB SSD   │       │ & Logs      │      │ micro       │
          └─────────────┘       └─────────────┘      └─────────────┘
-         
-         
+
+
          ┌──────────────────────────────────────────┐
          │  Lambda + EventBridge (Batch)            │
          │  Executa noturno: 23:00 UTC              │
@@ -195,8 +195,8 @@ Batch Pipeline (Executado noturno via Lambda):
          │  - Roda inference                        │
          │  - Salva S3 + atualiza RDS               │
          └──────────────────────────────────────────┘
-         
-         
+
+
          ┌──────────────────────────────────────────┐
          │  CloudWatch                              │
          │  - Logs (CloudWatch Logs)                │
@@ -355,7 +355,7 @@ VPC com 3 Subnets:
 ### 6.3 Data Protection
 
 - **In Transit**: TLS 1.2+
-- **At Rest**: 
+- **At Rest**:
   - RDS: AWS KMS encryption
   - S3: SSE-S3 encryption
   - Redis: No PII stored (only scores)
@@ -493,7 +493,7 @@ Model Training Complete:
       ├── Upload to S3 (versioned)
       ├── Update model_version.txt
       └── Trigger staging deployment
-      
+
       → Monitoring 48h in staging
         → If all metrics OK
            → Approve for production
@@ -564,7 +564,7 @@ Load (req/min) | EC2 Type | Count | Estimated Latency | Cost/month
 
 ---
 
-**Data de Criação**: 2026-04-19  
-**Versão**: 1.0  
-**Próxima Revisão**: 2026-05-19  
+**Data de Criação**: 2026-04-19
+**Versão**: 1.0
+**Próxima Revisão**: 2026-05-19
 **Autor**: Platform/ML Team

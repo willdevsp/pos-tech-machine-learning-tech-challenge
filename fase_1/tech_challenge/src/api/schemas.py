@@ -13,7 +13,7 @@ from enum import Enum
 
 class HealthCheckResponse(BaseModel):
     """Response do endpoint de health check.
-    
+
     Indica status da API e se modelo está carregado.
     """
     status: str = Field(..., description="Status da API")
@@ -23,12 +23,12 @@ class HealthCheckResponse(BaseModel):
 
 class PredictionRequest(BaseModel):
     """Request para predição de churn de um cliente.
-    
+
     Features são enviadas como dicionário com nomes intuitívos
     (ex: Gender, Senior Citizen, Contract, etc).
     """
     features: Dict[str, Union[str, int, float]] = Field(
-        ..., 
+        ...,
         description="Dicionário com features nomeadas",
         example={
             "Gender": "Male",
@@ -53,7 +53,7 @@ class PredictionRequest(BaseModel):
         }
     )
     return_probability: bool = Field(default=True, description="Retornar probabilidades?")
-    
+
     @validator('features')
     def features_not_empty(cls, v):
         if not v or len(v) == 0:
@@ -63,7 +63,7 @@ class PredictionRequest(BaseModel):
 
 class PredictionResponse(BaseModel):
     """Response com resultado de predição de churn.
-    
+
     Retorna: predição (0/1), probabilidade opcional e tempo de processamento.
     """
     prediction: int = Field(..., description="0=No Churn, 1=Churn")
@@ -74,15 +74,15 @@ class PredictionResponse(BaseModel):
 
 class BatchPredictionRequest(BaseModel):
     """Request para predição em lote.
-    
+
     Aceita lista de clientes para predição simultânea.
     """
     samples: List[Dict[str, Union[str, int, float]]] = Field(
-        ..., 
+        ...,
         description="Lista de dicionários com features nomeadas"
     )
     return_probabilities: bool = Field(default=True, description="Retornar probabilidades?")
-    
+
     @validator('samples')
     def samples_not_empty(cls, v):
         if not v or len(v) == 0:
@@ -92,7 +92,7 @@ class BatchPredictionRequest(BaseModel):
 
 class BatchPredictionResponse(BaseModel):
     """Response com resultado de predições em lote.
-    
+
     Retorna: lista de predições, probabilidades opcionais, tamanho do lote e tempo.
     """
     predictions: List[int] = Field(..., description="Lista de predições")

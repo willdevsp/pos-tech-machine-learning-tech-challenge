@@ -68,7 +68,7 @@
 - **Insight**: Granularidade geográfica muito fina
 
 ### 7. **Zip Code**
-- **Tipo**: String (e.g., "90001", "10001")  
+- **Tipo**: String (e.g., "90001", "10001")
 - **Descrição**: CEP (código postal) do cliente
 - **Valores Possíveis**: 1,000+ códigos postais únicos
 - **Uso em ML**: REMOVER ou agrupar (cardinalidade alta)
@@ -147,7 +147,7 @@
 - **Tipo**: Inteiro (0-72 meses)
 - **Descrição**: Meses desde que cliente é ativo
 - **Valores Possíveis**: [0, 1, 2, ..., 72]
-- **Estatísticas**: 
+- **Estatísticas**:
   - Mínimo: 0 meses
   - Máximo: 72 meses
   - Média: 32.4 meses
@@ -182,9 +182,9 @@
 - **Valores Possíveis**: ["DSL", "Fiber optic", "No"]
 - **Distribuição**: DSL: ~39% | Fiber optic: ~44% | No: ~17%
 - **Uso em ML**: Feature categórica (One-Hot)
-- **Insight Churn**: 
+- **Insight Churn**:
   - Fiber optic: **41.89% churn** 🔴 ALTO
-  - DSL: **18.96% churn** 🟡 MÉDIO  
+  - DSL: **18.96% churn** 🟡 MÉDIO
   - No Internet: **7.40% churn** 🟢 BAIXO
 - **Recomendação**: Feature IMPORTANTE para modelo
 
@@ -252,7 +252,7 @@
 - **Valores Possíveis**: ["Month-to-month", "One year", "Two year"]
 - **Distribuição**: Month-to-month: ~55% | One year: ~20% | Two year: ~25%
 - **Uso em ML**: Feature categórica (One-Hot)
-- **Insight Churn**: 
+- **Insight Churn**:
   - Month-to-month: **42.71% churn** 🔴 CRÍTICO
   - One year: **11.27% churn** 🟡 MÉDIO
   - Two year: **2.83% churn** 🟢 EXCELENTE
@@ -272,13 +272,13 @@
 - **Tipo**: Categórico (4 valores)
 - **Descrição**: Método de pagamento preferido do cliente
 - **Valores Possíveis**: ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"]
-- **Distribuição**: 
+- **Distribuição**:
   - Electronic check: ~35%
   - Mailed check: ~18%
   - Bank transfer: ~23%
   - Credit card: ~24%
 - **Uso em ML**: Feature categórica (One-Hot)
-- **Insight Churn**: 
+- **Insight Churn**:
   - Electronic check: **45.29% churn** 🔴 ALTO (cliente pode estar insatisfeito)
   - Mailed check: **20.73% churn** 🟡 MÉDIO
   - Bank transfer: **16.26% churn** 🟢 BOM (automático = comprometido)
@@ -358,7 +358,7 @@
 ### 33. **Churn Reason**
 - **Tipo**: String (texto livre)
 - **Descrição**: Motivo do churn informado pelo cliente
-- **Valores Possíveis**: 
+- **Valores Possíveis**:
   - "Competitor made better offer"
   - "Moved"
   - "Switched to better device"
@@ -371,7 +371,7 @@
 - **Uso em ML**: 🔄 USAR COM CUIDADO - NLP opcional
   - Se usar: Necessário text preprocessing (limpeza, tokenização, embedding)
   - Se NÃO usar: OK, outras features suficientes
-- **Insight Churn**: 
+- **Insight Churn**:
   - "Competitor...": Problema preço/serviço
   - "Technical support": Problema de qualidade
   - "Moved": Fora de alcance geográfico
@@ -404,7 +404,7 @@
 
 2. StandardScaler (Numéricas):
    - tenure_months
-   - monthly_charges  
+   - monthly_charges
    - total_charges
 
 3. Remover (Sem variância):
@@ -433,5 +433,5 @@
 
 ---
 
-**Versão**: 1.0  
-**Última Atualização**: Abril 2026  
+**Versão**: 1.0
+**Última Atualização**: Abril 2026

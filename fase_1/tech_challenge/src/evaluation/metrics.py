@@ -35,7 +35,7 @@ class TelcoMetrics:
     FALSE_POSITIVE_COST = 20  # Custo de campanha ineficaz ($)
 
 
-    
+
 
     @staticmethod
     def calcular_metricas_tecnicas(y_true, y_pred, y_pred_proba):

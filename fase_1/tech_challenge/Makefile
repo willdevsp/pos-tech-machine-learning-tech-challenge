@@ -15,7 +15,7 @@ help:
 	@echo "Setup & Instalação:"
 	@echo "  make install          - Instalar dependências"
 	@echo "  make install-dev      - Instalar com dev dependencies"
-	@echo "  make venv             - Criar virtual environment"	
+	@echo "  make venv             - Criar virtual environment"
 	@echo "  make clean            - Limpar arquivos temporários"
 	@echo ""
 	@echo "Code Quality:"
@@ -117,7 +117,7 @@ docs:
 # ==== VENV ====
 venv:
 	@echo "🐍 Criando virtual environment..."
-	$(PYTHON) -m venv $(VENV)	
+	$(PYTHON) -m venv $(VENV)
 	@echo "✅ Virtual environment criado"
 
 # ==== GIT ====

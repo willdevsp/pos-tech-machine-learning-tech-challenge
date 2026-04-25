@@ -1,7 +1,7 @@
 # 📋 Documentação Completa - Telco Churn Prediction Project
 
-**Status**: ✅ Pronto para Staging  
-**Última Atualização**: 2026-04-19  
+**Status**: ✅ Pronto para Staging
+**Última Atualização**: 2026-04-19
 **Commits**: 4 etapas de documentação + refatoração de código anterior
 
 ---
@@ -9,7 +9,7 @@
 ## 📑 Índice de Documentação
 
 ### 1. 📊 [ML Canvas](docs/ML_CANVAS.md)
-**Descrição**: Contexto de negócio, stakeholders, métricas de sucesso  
+**Descrição**: Contexto de negócio, stakeholders, métricas de sucesso
 **Seções**:
 - Proposta de valor
 - Atores de negócio (Marketing, Finance, Customer Success, Ops)
@@ -18,13 +18,13 @@
 - Dataset overview (7K clientes, 33 features, 26.5% churn)
 - Limitações e cenários de falha
 
-**Público**: Executivos, Product Managers, Stakeholders  
+**Público**: Executivos, Product Managers, Stakeholders
 **Próximas Ações**: Aprovação de stakeholders (CFO, VP Sales, Compliance)
 
 ---
 
 ### 2. 🤖 [Model Card](docs/MODEL_CARD.md)
-**Descrição**: Documentação técnica completa do modelo  
+**Descrição**: Documentação técnica completa do modelo
 **Seções**:
 - Informações básicas (Framework: PyTorch/XGBoost, Input: 19 features, Output: prob + classe)
 - Performance (Accuracy 79.7%, Precision 68%, Recall 66%, F1 0.67, AUC 0.844)
@@ -37,13 +37,13 @@
 - SLA e monitoramento
 - Roadmap v1.1/v2.0/v3.0
 
-**Público**: ML Engineers, Data Scientists, Compliance  
+**Público**: ML Engineers, Data Scientists, Compliance
 **Próximas Ações**: Auditoria mensal de fairness, validação de LGPD
 
 ---
 
 ### 3. 🏗️ [Arquitetura de Deploy](docs/ARQUITETURA_DEPLOY.md)
-**Descrição**: Estratégia de deploy hybrid real-time + batch  
+**Descrição**: Estratégia de deploy hybrid real-time + batch
 **Seções**:
 - Decisão arquitetural (Real-time API + Batch) com justificativa
 - Componentes AWS (ALB, EC2, RDS, S3, Lambda, CloudWatch, Redis)
@@ -56,13 +56,13 @@
 - Escalação horizontal (ASG automático)
 - Roadmap evolução (Q2/Q3/Q4)
 
-**Público**: Platform Engineers, DevOps, CTO  
+**Público**: Platform Engineers, DevOps, CTO
 **Próximas Ações**: Terraform apply em staging, teste de carga
 
 ---
 
 ### 4. 📈 [Plano de Monitoramento](docs/PLANO_MONITORAMENTO.md)
-**Descrição**: Estratégia completa de observabilidade 24/7  
+**Descrição**: Estratégia completa de observabilidade 24/7
 **Seções**:
 - SLOs definidos (Uptime 99.9%, P95 <200ms, <0.5% erro, F1 ≥0.67)
 - **Métricas de Infraestrutura**: CPU, memória, conectividade, discos
@@ -76,13 +76,13 @@
 - Retention policies (logs 30d, metrics 63d, archives S3)
 - Reuniões monitoramento (daily, weekly, monthly)
 
-**Público**: Ops, ML Team, On-call engineers  
+**Público**: Ops, ML Team, On-call engineers
 **Próximas Ações**: Implementar CloudWatch dashboards, configurar PagerDuty
 
 ---
 
 ### 5. 🏭 [Plano Terraform AWS](docs/TERRAFORM_AWS_PLAN.md)
-**Descrição**: Infrastructure as Code completo SEM SageMaker  
+**Descrição**: Infrastructure as Code completo SEM SageMaker
 **Componentes AWS**:
 - **VPC**: 3 subnets (2 públicas, 1 privada), security groups segregados
 - **Compute**: EC2 t3.medium, ASG (min=2, max=10), ALB com HTTPS
@@ -97,7 +97,7 @@
 - Staging: ~$150/mês
 - Produção: ~$235-300/mês (otimizado a $100-120/mês com Spot + Reserved instances)
 
-**Terraform Files**: 9 arquivos (.tf) + state em S3 + DynamoDB locks  
+**Terraform Files**: 9 arquivos (.tf) + state em S3 + DynamoDB locks
 **Deploy Time**: ~20 min (RDS é o bottleneck com ~10 min)
 
 **Próximas Ações**: `terraform init` → `terraform plan` → `terraform apply`
@@ -140,17 +140,17 @@
    - [ ] EC2 + ASG funcionando
    - [ ] RDS provisioning completo
    - [ ] API respondendo /health
-   
+
 2. Testes de Carga
    - [ ] 500 req/min sustained
    - [ ] Latência P95 < 200ms
    - [ ] Cache hit rate > 80%
-   
+
 3. Integração CRM
    - [ ] Mock CRM webhook configurado
    - [ ] Batch predictions exportadas
    - [ ] End-to-end test
-   
+
 4. Monitoramento Live
    - [ ] CloudWatch dashboards ativas
    - [ ] Alertas funcionando
@@ -236,8 +236,8 @@
 
 ---
 
-**Data Criação**: 2026-04-19  
-**Próxima Revisão**: 2026-05-19  
+**Data Criação**: 2026-04-19
+**Próxima Revisão**: 2026-05-19
 **Versão Docs**: 1.0
 
 ---

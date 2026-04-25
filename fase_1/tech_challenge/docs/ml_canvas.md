@@ -169,13 +169,13 @@ Uma operadora de telecomunicações está perdendo clientes em ritmo acelerado. 
 
 ## Próximas Etapas
 
-✅ **Etapa 1 Completa**: ML Canvas definido  
-→ **Etapa 2**: Exploração exploratória de dados (EDA) em andamento  
-→ **Etapa 3**: Baseline com DummyClassifier e Regressão Logística  
+✅ **Etapa 1 Completa**: ML Canvas definido
+→ **Etapa 2**: Exploração exploratória de dados (EDA) em andamento
+→ **Etapa 3**: Baseline com DummyClassifier e Regressão Logística
 → **Etapa 4**: Treinar MLP com PyTorch
 
 ---
 
-**Versão**: 1.0  
-**Data**: Abril 2026  
+**Versão**: 1.0
+**Data**: Abril 2026
 **Autor**: Equipe de ML

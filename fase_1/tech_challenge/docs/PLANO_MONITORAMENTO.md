@@ -1,7 +1,7 @@
 # Plano de Monitoramento - Telco Churn Prediction
 
-**Data**: 2026-04-19  
-**Versão**: 1.0  
+**Data**: 2026-04-19
+**Versão**: 1.0
 **Dono**: ML + Platform Team
 
 ---
@@ -80,7 +80,7 @@ Métricas Chave:
   - Network In/Out: Monitor picos
   - Disk Space: Alerta >80% (RDS, logs)
   - Process Health: Gunicorn workers status
-  
+
 CloudWatch:
   - Namespace: AWS/EC2
   - Period: 1 minute
@@ -96,7 +96,7 @@ Métricas Chave:
   - Disk Space Free: >20GB (alerta <10GB)
   - Read/Write Latency: <50ms (alerta >100ms)
   - Query Performance Insights: Slow queries
-  
+
 Backup:
   - Automated backup running: Daily 23:00
   - Backup size: Monitor crescimento
@@ -127,7 +127,7 @@ Endpoint: /api/predict
     - P99: <500ms (target)
   - Error Rate: 4xx, 5xx
   - Status Codes: 200, 400, 422, 500, 503
-  
+
 Endpoint: /api/predict-batch
   - Request Rate: requisições/minuto
   - Latency Distribution: P95 <2s (1000 amostras)
@@ -149,7 +149,7 @@ Prediction Service:
   - Feature Transformation: <50ms
   - Scaler Transformation: <10ms
   - Model Forward Pass: <80ms
-  
+
 Batch Processing:
   - Batch Size: 1000-5000 amostras
   - Total Batch Time: <5 minutos (target)
@@ -165,7 +165,7 @@ Redis Cache:
   - Misses: <20%
   - Cache Size: Monitor (eviction se full)
   - TTL Effectiveness: Evictions/min
-  
+
 Metrics Cached:
   - Model scaler coefficients
   - Feature names list
@@ -183,7 +183,7 @@ Monitoramento Semanal:
   - Tenure: median, p25, p75 (drift detection)
   - monthly_charges: median, std dev
   - contract Types: % distribution shift
-  
+
 Técnica: Kolmogorov-Smirnov Test
   - KL divergence < 0.05: OK
   - KL divergence 0.05-0.1: Warning
@@ -198,7 +198,7 @@ Monitoramento Diário:
   - Avg Probability: Should be ~0.27
   - Calibration: Plot predicted vs actual probability
   - Score Distribution: Histogram (bimodal esperado)
-  
+
 Alert Triggers:
   - % Churn Predicted > 40%: Something wrong
   - % Churn Predicted < 15%: Model too conservative
@@ -212,7 +212,7 @@ Sliding Window (últimos 1000 predictions):
   - Recall: Current vs baseline
   - F1-Score: Current vs baseline
   - Confusion Matrix: TP, FP, TN, FN
-  
+
 Frequency: Hourly computation, daily alert
 Alert Threshold:
   - F1 < 0.60: Urgent investigation
@@ -229,7 +229,7 @@ Campanha de Retenção:
   - # Clientes retidos: Semanalmente (feedback)
   - Conversion Rate: % retidos / alertados
   - ROI: (Receita preservada - Custo campanha) / Custo
-  
+
 Data Quality:
   - # Clientes com dados completos: 95%+
   - # Missing values: Monitor por feature
@@ -415,13 +415,13 @@ Level 1 (ML Engineer - 15 min):
   2. Compare prediction distribution vs baseline
   3. Verificar se houve data drift
   4. Gather info para level 2
-  
+
 Level 2 (ML Lead - 30 min):
   1. Review model evaluation metrics
   2. Compare feature distributions (semanal)
   3. Decide: Retraining vs Rollback v0.9
   4. Communicate timeline ao product
-  
+
 Level 3 (VP Engineering - 1h):
   1. Assess business impact (campaigns afetadas?)
   2. Approve emergency retraining
@@ -449,7 +449,7 @@ Step 1: Diagnostics
   □ Check RDS connections (if >80, investigate queries)
   □ Check Redis cache hit rate (if <70%, issue?)
   □ Review slow query logs
-  
+
 Step 2: Mitigation
   if CPU > 85%:
     → Manually trigger ASG scale out (+1 instance)
@@ -459,7 +459,7 @@ Step 2: Mitigation
     → Kill if necessary, identify query plan
   if cache miss:
     → Restart Redis, check hot keys
-    
+
 Step 3: Prevention
   → Add to capacity planning
   → Implement query optimization
@@ -488,32 +488,32 @@ Step 1: Root Cause Analysis
     - % missing values per feature
     - Outliers introduced
     - Schema violations
-    
+
 Step 2: Decision Tree
   if Feature Drift > 0.15:
     → Retraining required (2-3h)
     → Gather new data, retrain, validate
     → Deploy v1.1 canary (10% traffic)
-    
+
   else if Data Quality Issue:
     → Investigate data pipeline
     → Fix upstream data source
     → Resume monitoring
-    
+
   else if Calibration issue only:
     → Can wait until next scheduled retraining
     → Monitor weekly
-    
+
   else (unknown):
     → Escalate to ML Lead
     → Run deeper diagnostics
-    
+
 Step 3: Implement Fix
   → Execute chosen path
   → Validate on staging
   → Deploy with canary (if model change)
   → Monitor 48h closely
-  
+
 Step 4: Communication
   → Slack #ml team immediately
   → Daily standup: status update
@@ -529,21 +529,21 @@ Step 1: Immediate
   □ Alert on-call DBA
   □ Check log files size (CloudWatch, RDS logs)
   □ Check backup size (may be stored locally)
-  
+
 Step 2: Quick Mitigation
   if Logs too large:
     → Purge old logs: DELETE FROM logs WHERE date < now() - 30d
     → Estimated recovery: 5-10GB
-    
+
   if Backups stale:
     → Delete old backup snapshots
     → AWS automatic backup retention policy
-    
+
 Step 3: Longer Term
   → Increase RDS disk size (needs ~30min downtime)
   → Monitor growth rate
   → Implement log retention policy
-  
+
 Step 4: Prevention
   → Set alert for <20GB
   → Monitor growth trend monthly
@@ -632,12 +632,12 @@ Slack Apps:
 Daily Standup (15 min):
   - Qualquer alerta overnight?
   - Sistema verde? Ou investigações em andamento?
-  
+
 Weekly Review (30 min):
   - Tendências da semana
   - Qualquer padrão emergente
   - Alertas falsas (tuning necessário?)
-  
+
 Monthly Deep Dive (60 min):
   - Model performance review
   - Infrastructure capacity planning
@@ -694,6 +694,6 @@ Goal: Detectar 95% dos problemas antes que afetem clientes
 
 ---
 
-**Data**: 2026-04-19  
-**Versão**: 1.0  
+**Data**: 2026-04-19
+**Versão**: 1.0
 **Próxima Revisão**: 2026-05-19
