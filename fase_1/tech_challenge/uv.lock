@@ -5753,7 +5753,10 @@ ml = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "ipykernel" },
     { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
 ]
 
 [package.metadata]
@@ -5789,7 +5792,12 @@ requires-dist = [
 provides-extras = ["dev", "ml"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pre-commit", specifier = ">=4.6.0" }]
+dev = [
+    { name = "ipykernel", specifier = ">=7.2.0" },
+    { name = "pre-commit", specifier = ">=4.6.0" },
+    { name = "pytest", specifier = ">=9.0.3" },
+    { name = "pytest-cov", specifier = ">=7.1.0" },
+]
 
 [[package]]
 name = "terminado"

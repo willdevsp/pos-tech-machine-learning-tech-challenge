@@ -3,11 +3,15 @@
 import mlflow
 import mlflow.sklearn
 import numpy as np
+import mlflow.data
+import pandas as pd
+from mlflow.data.pandas_dataset import PandasDataset
 import os
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
+    confusion_matrix,
     roc_auc_score,
     average_precision_score,
     accuracy_score,
@@ -268,6 +272,64 @@ class BaselineExperiment:
             }
 
             mlflow.log_metrics(metricas)
+
+            # Adding model info to MLflow artifacts
+            mlflow.log_dict({
+                'model_type': type(modelo).__name__,
+                'parameters': parametros,
+                'metrics': metricas
+            }, artifact_file="model_info.json")
+
+            mlflow.log_dict({
+                'classification_report': classification_report(y_test, y_pred, output_dict=True)
+            }, artifact_file="classification_report.json")
+
+            mlflow.log_dict({
+                'confusion_matrix': confusion_matrix(y_test, y_pred).tolist()
+            }, artifact_file="confusion_matrix.json")
+
+            # 1. Ensure X_train is a DataFrame
+            if not isinstance(X_train, pd.DataFrame):
+                train_df = pd.DataFrame(X_train)
+            else:
+                train_df = X_train.copy()
+
+            # 2. Assign the target safely
+            if hasattr(y_train, 'values'):
+                train_df['churn_value'] = y_train.values
+            else:
+                train_df['churn_value'] = y_train
+
+            # Repeat the same logic for test_df
+            if not isinstance(X_test, pd.DataFrame):
+                test_df = pd.DataFrame(X_test)
+            else:
+                test_df = X_test.copy()
+
+            test_df['churn_value'] = y_test.values if hasattr(y_test, 'values') else y_test
+            dataset_train = mlflow.data.from_pandas(train_df, targets="churn_value", name="churn_train")
+            dataset_test = mlflow.data.from_pandas(test_df, targets="churn_value", name="churn_test")
+
+            mlflow.log_input(dataset_train, context="training")
+            mlflow.log_input(dataset_test, context="testing")
+
+            # Save to local temporary CSVs
+            pd.DataFrame(X_train).to_csv("X_train.csv", index=False)
+            pd.DataFrame(X_test).to_csv("X_test.csv", index=False)
+            pd.DataFrame(y_train).to_csv("y_train.csv", index=False)
+            pd.DataFrame(y_test).to_csv("y_test.csv", index=False)
+
+            # Log the files to MLflow
+            mlflow.log_artifact("X_train.csv", artifact_path="data")
+            mlflow.log_artifact("X_test.csv", artifact_path="data")
+            mlflow.log_artifact("y_train.csv", artifact_path="data")
+            mlflow.log_artifact("y_test.csv", artifact_path="data")
+
+            # Remove files after logging
+            os.remove("X_train.csv")
+            os.remove("X_test.csv")
+            os.remove("y_train.csv")
+            os.remove("y_test.csv")
 
             # Exibir resultados
             print(f"\n[OK] {nome_modelo} treinado")

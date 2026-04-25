@@ -57,6 +57,7 @@ class TelcoDataPreprocessor:
     def extract_target(self, df: pd.DataFrame,
                       target_col: str = 'churn_value') -> Tuple[pd.DataFrame, pd.Series]:
         """Separa target (churn_value) das features (X, y)."""
+        df.rename(columns={'Churn Value': 'churn_value'}, inplace=True)
         if target_col not in df.columns:
             raise ValueError(f"Coluna '{target_col}' não encontrada")
 
@@ -167,6 +168,7 @@ class TelcoDataPreprocessor:
         # 2. Remover leakage
         df = self.drop_leakage_columns(df, drop_columns)
 
+        df.rename(columns={'Churn Value': 'churn_value'}, inplace=True)
         # 3. Extrair target
         X, y = self.extract_target(df)
 

@@ -49,7 +49,7 @@ class TelcoDataLoader:
             'CLTV',  # Leakage - correlacionado com churn
             'Churn Score',  # Leakage - score de churn externo
         ]
-
+        self.df.rename(columns={'Churn Value': 'churn_value'}, inplace=True)
         X = self.df.drop(columns=drop_cols + ['churn_value'])
         y = self.df['churn_value']
 
