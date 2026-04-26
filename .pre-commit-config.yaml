@@ -20,9 +20,9 @@ repos:
     hooks:
       - id: pytest
         name: pytest
-        # Change the entry to include the path to your challenge folder
-        entry: bash -c "cd fase_1/tech_challenge && uv run pytest"
+        # Use cmd /c for Windows to navigate and run
+        entry: cmd /c "cd fase_1/tech_challenge && uv run pytest"
         language: system
         pass_filenames: false
         always_run: true
-        stages: [pre-commit]
+        stages: [commit]
