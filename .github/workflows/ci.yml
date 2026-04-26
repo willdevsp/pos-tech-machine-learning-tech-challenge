@@ -42,6 +42,6 @@ jobs:
           uv run --project fase_1/tech_challenge ruff format --check .
 
       - name: Run pytest
+        working-directory: ./fase_1/tech_challenge
         run: |
-          # uv run automatically handles the pythonpath if defined in pyproject.toml
-          uv run --project fase_1/tech_challenge pytest
+          uv run pytest
