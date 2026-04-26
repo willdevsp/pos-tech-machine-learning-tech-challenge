@@ -1,6 +1,5 @@
 # Ruff configuration for Telco Churn Prediction
 
-[tool.ruff]
 # Python versions to target
 target-version = "py310"
 line-length = 100
