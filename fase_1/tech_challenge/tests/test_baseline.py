@@ -136,6 +136,7 @@ class TestBaselineExperiment:
         train_test_data,
         tmp_path,
     ):
+
         X_train, X_test, y_train, y_test = train_test_data
 
         mock_get_exp.return_value = None
@@ -167,14 +168,20 @@ class TestBaselineExperiment:
     @patch("mlflow.create_experiment")
     @patch("mlflow.get_experiment_by_name")
     @patch("mlflow.set_tracking_uri")
-    @patch("mlflow.start_run")
     @patch("mlflow.log_metrics")
+    @patch("mlflow.log_dict")
+    @patch("mlflow.log_artifact")
+    @patch("mlflow.log_input")
     @patch("mlflow.sklearn.log_model")
+    @patch("mlflow.start_run")
     def test_treinar_modelo_stores_results(
         self,
-        mock_log_model,
-        mock_log_metrics,
         mock_start_run,
+        mock_log_model,
+        mock_log_input,
+        mock_log_artifact,
+        mock_log_dict,
+        mock_log_metrics,
         mock_set_tracking_uri,
         mock_get_exp,
         mock_create_exp,
@@ -186,8 +193,14 @@ class TestBaselineExperiment:
     ):
         X_train, X_test, y_train, y_test = train_test_data
 
+        # ✅ Fix experiment setup
         mock_get_exp.return_value = None
         mock_active_run.return_value = None
+
+        # ✅ FIX: mock context manager
+        mock_run = MagicMock()
+        mock_start_run.return_value.__enter__.return_value = mock_run
+        mock_start_run.return_value.__exit__.return_value = False
 
         exp = BaselineExperiment(mlflow_uri=str(tmp_path))
 
@@ -204,8 +217,12 @@ class TestBaselineExperiment:
             nome_modelo="dummy",
         )
 
+        # ✅ Assertions
         assert "dummy" in exp.resultados
         assert "dummy" in exp._modelos
+
+        mock_log_metrics.assert_called()
+        mock_log_model.assert_called()
 
     def test_comparar_baselines(self):
         exp = BaselineExperiment()
