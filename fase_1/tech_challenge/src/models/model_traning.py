@@ -1,31 +1,21 @@
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath("")))
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pickle
 
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import roc_curve, precision_recall_curve, auc, confusion_matrix
+import mlflow
+from baseline import BaselineExperiment
 from sklearn.linear_model import LogisticRegression
 
 from data.loader import TelcoDataLoader
-from baseline import BaselineExperiment
-
-import pandas as pd
-import mlflow
-
 
 data_path = "data/processed/telco_churn_processed.csv"
 
 loader = TelcoDataLoader(data_path)
 X_train, X_test, y_train, y_test = loader.pipeline_completo()
 
-print(f"Dataset shape:")
+print("Dataset shape:")
 print(f"  X_train: {X_train.shape}")
 print(f"  X_test: {X_test.shape}")
 print(f"  y_train: {y_train.shape}")
@@ -34,12 +24,12 @@ print(f"\nChurn rate (train): {y_train.mean():.2%}")
 print(f"Churn rate (test): {y_test.mean():.2%}")
 
 
-print(f"Dados preparados:")
+print("Dados preparados:")
 print(f"  Features: {X_train.shape[1]}")
 print(f"  Train samples: {X_train.shape[0]}")
 print(f"  Test samples: {X_test.shape[0]}")
-print(f"  Seed: 42")
-print(f"  Stratified: True")
+print("  Seed: 42")
+print("  Stratified: True")
 
 
 if mlflow.active_run():

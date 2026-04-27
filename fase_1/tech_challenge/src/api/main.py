@@ -99,7 +99,7 @@ def create_app(model_path: str | None = None) -> FastAPI:
 
         except Exception as e:
             logger.error(f"✗ Erro ao carregar modelo: {e}")
-            logger.error(f"  Fallback: API disponível mas sem predições")
+            logger.error("  Fallback: API disponível mas sem predições")
             app.state.model_service = None
 
         logger.info("API iniciada com sucesso!")

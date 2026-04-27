@@ -34,7 +34,7 @@ class PredictionService:
 
     def __init__(
         self,
-        pipeline_path: str = None,
+        pipeline_path: str | None = None,
         scaler_path: str | None = None,
         preprocessor_path: str | None = None,
         use_mlflow: bool = True,
@@ -70,7 +70,7 @@ class PredictionService:
     @classmethod
     def load_model(
         cls,
-        pipeline_path: str = None,
+        pipeline_path: str | None = None,
         scaler_path: str | None = None,
         preprocessor_path: str | None = None,
     ) -> "PredictionService":

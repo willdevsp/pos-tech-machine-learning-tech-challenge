@@ -17,14 +17,12 @@ from pathlib import Path
 
 import mlflow
 import mlflow.sklearn
-import numpy as np
 from sklearn.linear_model import LogisticRegression
 
 # Adicionar src ao path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.data.loader import TelcoDataLoader
-from src.evaluation.metrics import TelcoMetrics
 from src.models.baseline import BaselineExperiment
 
 
@@ -78,7 +76,7 @@ def train_production_model():
         )
 
         print("\n✅ Modelo treinado com sucesso!")
-        print(f"  Tipo: LogisticRegression")
+        print("  Tipo: LogisticRegression")
         print(f"  Classe: {type(modelo).__name__}")
 
         # 5. Log de parâmetros
@@ -127,7 +125,7 @@ def train_production_model():
         print(f"  F1-Score:  {metricas.get('test_f1_score', 0):.4f}")
 
         if "business_net_benefit" in metricas:
-            print(f"\n💰 Métricas de Negócio:")
+            print("\n💰 Métricas de Negócio:")
             print(f"  Net Benefit: ${metricas['business_net_benefit']:.2f}")
             print(f"  ROI: {metricas.get('business_roi', 0):.2f}%")
 
