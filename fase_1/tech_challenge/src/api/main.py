@@ -7,17 +7,17 @@ API com suporte a MLflow Model Registry:
 - Suporta agendamento de atualização de modelo em background
 """
 
+import asyncio
 import logging
 import os
 import time
 import traceback
-import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 import mlflow
 import pandas as pd
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -43,7 +43,8 @@ retry_delay = 10
 # ============ NOVOS SCHEMAS PARA AGENDAMENTO ============
 class ScheduleUpdateRequest(BaseModel):
     """Schema para receber a data/hora do agendamento de atualização."""
-    target_datetime: datetime 
+
+    target_datetime: datetime
 
 
 class MLflowPipelineLoader:
@@ -74,8 +75,8 @@ class MLflowPipelineLoader:
             logger.info(f"📊 Tentando carregar pipeline: {model_uri}")
 
             self.pipeline = mlflow.sklearn.load_model(model_uri)
-            logger.info(f"✓ Pipeline carregado via MLflow: {model_uri}")          
-            
+            logger.info(f"✓ Pipeline carregado via MLflow: {model_uri}")
+
             return True
 
         except Exception as e:
@@ -105,7 +106,7 @@ class MLflowPipelineLoader:
 async def wait_and_update_model(target_time: datetime, app: FastAPI):
     """Calcula o tempo de espera, dorme, e depois atualiza o modelo na memória da API."""
     now = datetime.now(timezone.utc)
-    
+
     # Se a data alvo não tiver timezone, forçamos para UTC para evitar bugs
     if target_time.tzinfo is None:
         target_time = target_time.replace(tzinfo=timezone.utc)
@@ -114,7 +115,9 @@ async def wait_and_update_model(target_time: datetime, app: FastAPI):
     delay_seconds = (target_time - now).total_seconds()
 
     if delay_seconds > 0:
-        logger.info(f"⏰ Atualização agendada! A API vai aguardar {int(delay_seconds)} segundos até {target_time}.")
+        logger.info(
+            f"⏰ Atualização agendada! A API vai aguardar {int(delay_seconds)} segundos até {target_time}."
+        )
         await asyncio.sleep(delay_seconds)
     else:
         logger.warning("A data informada já passou! Atualizando modelo imediatamente.")
@@ -122,16 +125,20 @@ async def wait_and_update_model(target_time: datetime, app: FastAPI):
     # A hora chegou! Vamos instanciar um novo loader para não quebrar requisições ativas
     logger.info("🚀 Hora alcançada! Iniciando o download e a troca do modelo...")
     new_loader = MLflowPipelineLoader()
-    
+
     success = new_loader.load_from_mlflow(model_name="TelcoChurnPipeline", stage="Production")
-    
+
     if success and new_loader.is_loaded():
         # Substitui atomicamente as variáveis na memória do FastAPI
         app.state.pipeline = new_loader.pipeline
         app.state.feature_names = new_loader.get_feature_names()
-        logger.info(f"✅ Hot-Swap concluído! API agora está usando o novo modelo em Production. Features: {app.state.feature_names}")
+        logger.info(
+            f"✅ Hot-Swap concluído! API agora está usando o novo modelo em Production. Features: {app.state.feature_names}"
+        )
     else:
-        logger.error("❌ Falha ao baixar o novo modelo agendado. A API continuará usando a versão antiga na memória.")
+        logger.error(
+            "❌ Falha ao baixar o novo modelo agendado. A API continuará usando a versão antiga na memória."
+        )
 
 
 def create_app(model_path: str | None = None) -> FastAPI:
@@ -158,30 +165,31 @@ def create_app(model_path: str | None = None) -> FastAPI:
             loader = MLflowPipelineLoader()
 
             # Tentar carregar do MLflow primeiro
-            for attempt in range(max_retries):                
-                loader.load_from_mlflow(
-                    model_name="TelcoChurnPipeline", stage="Production"
-                )
+            for attempt in range(max_retries):
+                loader.load_from_mlflow(model_name="TelcoChurnPipeline", stage="Production")
 
                 if loader.is_loaded():
                     app.state.pipeline = loader.pipeline
                     app.state.feature_names = loader.get_feature_names()
-                    logger.info(f"✓ Pipeline carregado com sucesso do MLflow! Features: {app.state.feature_names}")
+                    logger.info(
+                        f"✓ Pipeline carregado com sucesso do MLflow! Features: {app.state.feature_names}"
+                    )
                     logger.info("✓ Pipeline carregado com sucesso")
-                    preprocessor = app.state.pipeline.named_steps['preprocessor']
-                    for name, transformer, columns in preprocessor.transformers_:
-                        logger.info(f"🔍 O transformer '{name}' está esperando estas colunas: {columns}")
                     break
                 else:
-                    logger.warning(f"⏳ Modelo não encontrado no MLflow. Nova tentativa em {retry_delay}s... - Tentativa {attempt + 1}/{max_retries}")
-                    await asyncio.sleep(retry_delay) # Usar asyncio.sleep aqui é melhor que time.sleep
-                   
-            if not loader.is_loaded():                
+                    logger.warning(
+                        f"⏳ Modelo não encontrado no MLflow. Nova tentativa em {retry_delay}s... - Tentativa {attempt + 1}/{max_retries}"
+                    )
+                    await asyncio.sleep(
+                        retry_delay
+                    )  # Usar asyncio.sleep aqui é melhor que time.sleep
+
+            if not loader.is_loaded():
                 raise RuntimeError(
-                            "Não foi possível carregar o Pipeline. "
-                            "Configure MLFLOW_TRACKING_URI ou forneça model_path."
-                        )
-            
+                    "Não foi possível carregar o Pipeline. "
+                    "Configure MLFLOW_TRACKING_URI ou forneça model_path."
+                )
+
         except Exception as e:
             logger.error(f"✗ Erro ao carregar Pipeline: {e}")
             logger.error("  API iniciada em modo DEGRADADO (sem predições)")
@@ -235,13 +243,13 @@ def create_app(model_path: str | None = None) -> FastAPI:
         """
         # Passa a função, o payload de tempo e a instância 'app' para a tarefa de background
         background_tasks.add_task(wait_and_update_model, request.target_datetime, app)
-        
+
         return JSONResponse(
             status_code=202,
             content={
                 "status": "accepted",
-                "message": f"Atualização do modelo agendada para {request.target_datetime.isoformat()}"
-            }
+                "message": f"Atualização do modelo agendada para {request.target_datetime.isoformat()}",
+            },
         )
 
     # ============ HEALTH CHECK ============
@@ -280,10 +288,14 @@ def create_app(model_path: str | None = None) -> FastAPI:
         logger.info("Recebendo requisição de predição...")
 
         try:
-            features_dict = request.features.model_dump() if hasattr(request.features, "model_dump") else request.features.dict()
-            logger.info(f"Features recebidas (raw)")
+            features_dict = (
+                request.features.model_dump()
+                if hasattr(request.features, "model_dump")
+                else request.features.dict()
+            )
+            logger.info("Features recebidas (raw)")
             X = pd.DataFrame([features_dict])
-            
+
             y_pred = app.state.pipeline.predict(X)
 
             if request.return_probability:
@@ -336,15 +348,14 @@ def create_app(model_path: str | None = None) -> FastAPI:
 
         try:
             samples_list = [
-                s.model_dump() if hasattr(s, "model_dump") else s.dict()
-                for s in request.samples
+                s.model_dump() if hasattr(s, "model_dump") else s.dict() for s in request.samples
             ]
             X = pd.DataFrame(samples_list)
             y_pred = app.state.pipeline.predict(X)
 
             if request.return_probabilities:
                 y_proba = app.state.pipeline.predict_proba(X)
-                probas = y_proba[:, 1].tolist() # Probabilidade da classe 1 (churn)
+                probas = y_proba[:, 1].tolist()  # Probabilidade da classe 1 (churn)
             else:
                 probas = None
 

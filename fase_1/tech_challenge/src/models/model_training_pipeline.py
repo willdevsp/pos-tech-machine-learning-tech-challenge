@@ -8,9 +8,9 @@ Cria um Pipeline sklearn que une:
 O Pipeline completo é logado no MLflow para fácil reprodução e deploy.
 """
 
+import logging
 import os
 import sys
-import logging
 
 from sklearn.model_selection import train_test_split
 
@@ -19,10 +19,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath("")))
 import mlflow
 import pandas as pd
 from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.impute import SimpleImputer
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -32,12 +32,14 @@ logger = logging.getLogger(__name__)
 class PipelineBuilder:
     """Construtor do Pipeline completo de ML com pré-processamento integrado."""
 
-    def __init__(self, random_state: int = 42, data_path: str = "data/processed/telco_churn_processed.csv"):
+    def __init__(
+        self, random_state: int = 42, data_path: str = "data/processed/telco_churn_processed.csv"
+    ):
         self.random_state = random_state
         self.categorical_columns = None
         self.numerical_columns = None
         self.pipeline = None
-        self.data_path = data_path        
+        self.data_path = data_path
 
     def identify_feature_types(self, X: pd.DataFrame) -> tuple[list, list]:
         """
@@ -54,8 +56,7 @@ class PipelineBuilder:
         self.categorical_columns = X.select_dtypes(include=["object"]).columns.tolist()
         self.numerical_columns = X.select_dtypes(include=["number"]).columns.tolist()
 
-
-        logger.info(f"✓ Colunas identificadas:")
+        logger.info("✓ Colunas identificadas:")
         logger.info(f"  - Categóricas: {len(self.categorical_columns)}")
         logger.info(f"  - Numéricas: {len(self.numerical_columns)}")
         logger.info(f"  - Categóricas: {self.categorical_columns}")
@@ -165,66 +166,70 @@ class PipelineBuilder:
     def get_pipeline(self) -> Pipeline:
         """Retorna o Pipeline treinado."""
         return self.pipeline
-    
+
     def preparar_features_target(self) -> tuple[pd.DataFrame, pd.Series]:
-            """
-            Separa features e target.
+        """
+        Separa features e target.
 
-            Target: churn_value (0 = Não Churn, 1 = Churn)
-            """
+        Target: churn_value (0 = Não Churn, 1 = Churn)
+        """
 
-            self.df[self.df.select_dtypes(include=['Int64']).columns] = self.df.select_dtypes(include=['Int64']).astype('int64')
+        self.df[self.df.select_dtypes(include=["Int64"]).columns] = self.df.select_dtypes(
+            include=["Int64"]
+        ).astype("int64")
 
-            # Remover colunas não relevantes
-            drop_cols = [
-                "customerid",
-                "count",
-                "country",
-                "state",
-                "city",
-                "zip_code",
-                "lat_long",
-                "latitude",
-                "longitude",  # localização inútil
-                "churn_label",  # usar churn_value em vez disso
-                "churn_reason",  # razão subjetiva
-                "cltv",  # leakage - correlacionado com churn
-                "churn_score",  # leakage - score de churn externo
-            ]
-            self.df.rename(columns={"Churn Value": "churn_value"}, inplace=True)
-            X = self.df.drop(columns=[*drop_cols, "churn_value"])
-            y = self.df["churn_value"]            
+        # Remover colunas não relevantes
+        drop_cols = [
+            "customerid",
+            "count",
+            "country",
+            "state",
+            "city",
+            "zip_code",
+            "lat_long",
+            "latitude",
+            "longitude",  # localização inútil
+            "churn_label",  # usar churn_value em vez disso
+            "churn_reason",  # razão subjetiva
+            "cltv",  # leakage - correlacionado com churn
+            "churn_score",  # leakage - score de churn externo
+        ]
+        self.df.rename(columns={"Churn Value": "churn_value"}, inplace=True)
+        X = self.df.drop(columns=[*drop_cols, "churn_value"])
+        y = self.df["churn_value"]
 
-            logger.info(f"[OK] Features selecionadas: {X.shape[1]}")
-            logger.info(f"  - Distribuicao de Churn: {y.value_counts().to_dict()}")
-            logger.info(f"  - Taxa de Churn: {y.mean() * 100:.2f}%")
+        logger.info(f"[OK] Features selecionadas: {X.shape[1]}")
+        logger.info(f"  - Distribuicao de Churn: {y.value_counts().to_dict()}")
+        logger.info(f"  - Taxa de Churn: {y.mean() * 100:.2f}%")
 
-            return X, y
+        return X, y
 
     def carregar(self) -> pd.DataFrame:
-            """Carrega o dataset."""
-            self.df = pd.read_csv(self.data_path)
-            logger.info(f"[OK] Dataset carregado: {self.df.shape[0]} linhas x {self.df.shape[1]} colunas")
-            return self.df
+        """Carrega o dataset."""
+        self.df = pd.read_csv(self.data_path)
+        logger.info(
+            f"[OK] Dataset carregado: {self.df.shape[0]} linhas x {self.df.shape[1]} colunas"
+        )
+        return self.df
 
     def split_treino_teste(
-            self, X: pd.DataFrame, y: pd.Series, test_size=0.2, random_state=42
-        ) -> None:
-            """
-            Divide dados em treino e teste.
+        self, X: pd.DataFrame, y: pd.Series, test_size=0.2, random_state=42
+    ) -> None:
+        """
+        Divide dados em treino e teste.
 
-            Usa stratified split para manter a proporção de churn.
-            """
-            self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-                X, y, test_size=test_size, random_state=random_state, stratify=y
-            )
+        Usa stratified split para manter a proporção de churn.
+        """
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            X, y, test_size=test_size, random_state=random_state, stratify=y
+        )
 
-            logger.info("[OK] Split treino/teste (80/20):")
-            logger.info(f"  - Treino: {self.X_train.shape[0]} amostras")
-            logger.info(f"  - Teste: {self.X_test.shape[0]} amostras")
-            logger.info(f"  - Taxa churn treino: {self.y_train.mean() * 100:.2f}%")
-            logger.info(f"  - Taxa churn teste: {self.y_test.mean() * 100:.2f}%")        
-        
+        logger.info("[OK] Split treino/teste (80/20):")
+        logger.info(f"  - Treino: {self.X_train.shape[0]} amostras")
+        logger.info(f"  - Teste: {self.X_test.shape[0]} amostras")
+        logger.info(f"  - Taxa churn treino: {self.y_train.mean() * 100:.2f}%")
+        logger.info(f"  - Taxa churn teste: {self.y_test.mean() * 100:.2f}%")
+
 
 def main():
     """Função principal do script de treinamento."""
@@ -243,13 +248,12 @@ def main():
         mlflow.create_experiment(experiment_name)
         logger.info(f"✓ Experimento criado: {experiment_name}")
     mlflow.set_experiment(experiment_name)
-    logger.info(f"✓ Usando experimento: {experiment_name}")    
+    logger.info(f"✓ Usando experimento: {experiment_name}")
 
     # ============ CONSTRUIR PIPELINE ============
     logger.info("\n1️⃣  Construindo Pipeline...")
     builder = PipelineBuilder(random_state=42)
-    
-        
+
     builder.carregar()
     logger.info("Tipo de dados carregados:  ")
     logger.info(builder.df.dtypes)
@@ -264,14 +268,13 @@ def main():
     builder.train(builder.X_train, builder.y_train)
     logger.info("✓ Pipeline treinado com sucesso")
 
-
     # ============ AVALIAR NO CONJUNTO DE TESTE ============
     logger.info("\n3️⃣  Avaliando Pipeline no conjunto de teste...")
     from sklearn.metrics import (
         accuracy_score,
+        f1_score,
         precision_score,
         recall_score,
-        f1_score,
         roc_auc_score,
     )
 
@@ -303,7 +306,7 @@ def main():
     raw_example = builder.df.head(1)
     # Pegar apenas colunas categóricas + numéricas (sem extras)
     raw_example = raw_example[builder.categorical_columns + builder.numerical_columns]
-    
+
     logger.info(f"✓ Input example (RAW): {raw_example.shape}")
     logger.info(f"  Colunas categóricas no exemplo: {builder.categorical_columns[:3]}...")
     logger.info(f"  Colunas numéricas no exemplo: {builder.numerical_columns[:3]}...")
@@ -341,8 +344,8 @@ def main():
         )
 
         logger.info("✓ Pipeline logado no MLflow")
-        logger.info(f"  - Modelo registrado: TelcoChurnPipeline")
-        logger.info(f"  - Artifact Path: model")
+        logger.info("  - Modelo registrado: TelcoChurnPipeline")
+        logger.info("  - Artifact Path: model")
 
     logger.info("\n" + "=" * 70)
     logger.info("✅ TREINAMENTO CONCLUÍDO COM SUCESSO")
