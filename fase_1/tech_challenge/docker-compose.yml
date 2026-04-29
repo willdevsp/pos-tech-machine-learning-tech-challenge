@@ -59,9 +59,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
-    volumes:
-      - ./mlartifacts:/mlartifacts
+      - MLFLOW_TRACKING_URI=http://mlflow:5000    
     command: ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
     networks:
       - mlflow_network
@@ -76,16 +74,13 @@ services:
       mlflow:
         condition: service_healthy
     environment:
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
-    volumes:
-      - ./mlartifacts:/app/mlartifacts
-      - ./models:/app/models
+      - MLFLOW_TRACKING_URI=http://mlflow:5000   
     networks:
       - mlflow_network
     # Não executa por padrão - rodar com:
     # docker-compose run training
-    # ou: docker-compose run training python src/models/model_traning.py
-    command: ["python", "src/models/model_training_pipeline.py"]
+    # ou: docker-compose run training python src/models/model_training_pipeline.py
+    
 
 volumes:
   postgres_data:

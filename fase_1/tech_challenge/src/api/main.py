@@ -4,20 +4,23 @@ API com suporte a MLflow Model Registry:
 - Carrega Pipeline completo do MLflow (preprocessamento + modelo)
 - Recebe dados brutos em formato JSON
 - Configure MLFLOW_TRACKING_URI para ativar integração MLflow
+- Suporta agendamento de atualização de modelo em background
 """
 
 import logging
 import os
 import time
 import traceback
+import asyncio
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 
 import mlflow
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from .schemas import (
     BatchPredictionRequest,
@@ -32,6 +35,15 @@ from .schemas import (
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+max_retries = 30
+retry_delay = 10
+
+
+# ============ NOVOS SCHEMAS PARA AGENDAMENTO ============
+class ScheduleUpdateRequest(BaseModel):
+    """Schema para receber a data/hora do agendamento de atualização."""
+    target_datetime: datetime 
 
 
 class MLflowPipelineLoader:
@@ -89,6 +101,39 @@ class MLflowPipelineLoader:
         return []
 
 
+# ============ FUNÇÃO DE BACKGROUND PARA ATUALIZAÇÃO ============
+async def wait_and_update_model(target_time: datetime, app: FastAPI):
+    """Calcula o tempo de espera, dorme, e depois atualiza o modelo na memória da API."""
+    now = datetime.now(timezone.utc)
+    
+    # Se a data alvo não tiver timezone, forçamos para UTC para evitar bugs
+    if target_time.tzinfo is None:
+        target_time = target_time.replace(tzinfo=timezone.utc)
+
+    # Calcula a diferença em segundos
+    delay_seconds = (target_time - now).total_seconds()
+
+    if delay_seconds > 0:
+        logger.info(f"⏰ Atualização agendada! A API vai aguardar {int(delay_seconds)} segundos até {target_time}.")
+        await asyncio.sleep(delay_seconds)
+    else:
+        logger.warning("A data informada já passou! Atualizando modelo imediatamente.")
+
+    # A hora chegou! Vamos instanciar um novo loader para não quebrar requisições ativas
+    logger.info("🚀 Hora alcançada! Iniciando o download e a troca do modelo...")
+    new_loader = MLflowPipelineLoader()
+    
+    success = new_loader.load_from_mlflow(model_name="TelcoChurnPipeline", stage="Production")
+    
+    if success and new_loader.is_loaded():
+        # Substitui atomicamente as variáveis na memória do FastAPI
+        app.state.pipeline = new_loader.pipeline
+        app.state.feature_names = new_loader.get_feature_names()
+        logger.info(f"✅ Hot-Swap concluído! API agora está usando o novo modelo em Production. Features: {app.state.feature_names}")
+    else:
+        logger.error("❌ Falha ao baixar o novo modelo agendado. A API continuará usando a versão antiga na memória.")
+
+
 def create_app(model_path: str | None = None) -> FastAPI:
     """
     Factory function para criar a aplicação FastAPI.
@@ -102,14 +147,7 @@ def create_app(model_path: str | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        """Lifecycle manager: startup e shutdown.
-
-        Startup:
-        - Carrega Pipeline completo do MLflow (preprocessador + modelo)
-
-        Shutdown:
-        - Limpeza de recursos
-        """
+        """Lifecycle manager: startup e shutdown."""
         # ============ STARTUP ============
         logger.info("=" * 70)
         logger.info("Iniciando Telco Churn Prediction API")
@@ -120,24 +158,30 @@ def create_app(model_path: str | None = None) -> FastAPI:
             loader = MLflowPipelineLoader()
 
             # Tentar carregar do MLflow primeiro
-            mlflow_loaded = loader.load_from_mlflow(
-                model_name="TelcoChurnPipeline", stage="Production"
-            )
-
-            if loader.is_loaded():
-                app.state.pipeline = loader.pipeline
-                app.state.feature_names = loader.get_feature_names()
-                logger.info(f"✓ Pipeline carregado com sucesso do MLflow! Features: {app.state.feature_names}")
-                logger.info("✓ Pipeline carregado com sucesso")
-                preprocessor = app.state.pipeline.named_steps['preprocessor']
-                for name, transformer, columns in preprocessor.transformers_:
-                    logger.info(f"🔍 O transformer '{name}' está esperando estas colunas: {columns}")
-            else:
-                raise RuntimeError(
-                    "Não foi possível carregar o Pipeline. "
-                    "Configure MLFLOW_TRACKING_URI ou forneça model_path."
+            for attempt in range(max_retries):                
+                loader.load_from_mlflow(
+                    model_name="TelcoChurnPipeline", stage="Production"
                 )
 
+                if loader.is_loaded():
+                    app.state.pipeline = loader.pipeline
+                    app.state.feature_names = loader.get_feature_names()
+                    logger.info(f"✓ Pipeline carregado com sucesso do MLflow! Features: {app.state.feature_names}")
+                    logger.info("✓ Pipeline carregado com sucesso")
+                    preprocessor = app.state.pipeline.named_steps['preprocessor']
+                    for name, transformer, columns in preprocessor.transformers_:
+                        logger.info(f"🔍 O transformer '{name}' está esperando estas colunas: {columns}")
+                    break
+                else:
+                    logger.warning(f"⏳ Modelo não encontrado no MLflow. Nova tentativa em {retry_delay}s... - Tentativa {attempt + 1}/{max_retries}")
+                    await asyncio.sleep(retry_delay) # Usar asyncio.sleep aqui é melhor que time.sleep
+                   
+            if not loader.is_loaded():                
+                raise RuntimeError(
+                            "Não foi possível carregar o Pipeline. "
+                            "Configure MLFLOW_TRACKING_URI ou forneça model_path."
+                        )
+            
         except Exception as e:
             logger.error(f"✗ Erro ao carregar Pipeline: {e}")
             logger.error("  API iniciada em modo DEGRADADO (sem predições)")
@@ -180,8 +224,25 @@ def create_app(model_path: str | None = None) -> FastAPI:
         return response
 
     # State da aplicação
-    app.state.pipeline = None  # Pipeline sklearn (preprocessador + modelo)
-    app.state.feature_names = []  # Nomes das features esperadas
+    app.state.pipeline = None
+    app.state.feature_names = []
+
+    # ============ ENDPOINT DE AGENDAMENTO (NOVO) ============
+    @app.post("/api/schedule-update", tags=["Model Management"])
+    async def schedule_update(request: ScheduleUpdateRequest, background_tasks: BackgroundTasks):
+        """
+        Agenda a atualização (hot-swap) do modelo do MLflow para uma data e hora específicas.
+        """
+        # Passa a função, o payload de tempo e a instância 'app' para a tarefa de background
+        background_tasks.add_task(wait_and_update_model, request.target_datetime, app)
+        
+        return JSONResponse(
+            status_code=202,
+            content={
+                "status": "accepted",
+                "message": f"Atualização do modelo agendada para {request.target_datetime.isoformat()}"
+            }
+        )
 
     # ============ HEALTH CHECK ============
     @app.get("/health", tags=["Health"])
@@ -205,16 +266,13 @@ def create_app(model_path: str | None = None) -> FastAPI:
     async def predict(request: PredictionRequest) -> PredictionResponse:
         """
         Fazer predição de churn para um cliente.
-
-        O Pipeline sklearn já contém o preprocessamento,
-        então apenas convertemos o JSON para DataFrame e passamos ao pipeline.
-
         Args:
             request: Features nomeadas do cliente (em formato texto/bruto)
 
         Returns:
             Predição com probabilidade e confiança
         """
+
         if app.state.pipeline is None:
             raise HTTPException(status_code=503, detail="Pipeline não foi carregado")
 
@@ -222,28 +280,17 @@ def create_app(model_path: str | None = None) -> FastAPI:
         logger.info("Recebendo requisição de predição...")
 
         try:
-            # 1. Converter objeto Pydantic para dict
             features_dict = request.features.model_dump() if hasattr(request.features, "model_dump") else request.features.dict()
-            
-            logger.info(f"Features recebidas (raw): {features_dict}")
-
-            # 2. Converter dict para DataFrame de 1 linha
-            # O pipeline sklearn já espera as features na ordem correta
+            logger.info(f"Features recebidas (raw)")
             X = pd.DataFrame([features_dict])
-
-            logger.info(X.head())
-
-            logger.info(f"Features convertidas para DataFrame: {X.shape} - Colunas: {X.columns.tolist()}")
-
-            # 3. Passar para o pipeline (que já faz o preprocessamento)
+            
             y_pred = app.state.pipeline.predict(X)
-            logger.info(f"Predição bruta do pipeline: {y_pred}")
 
             if request.return_probability:
                 y_proba = app.state.pipeline.predict_proba(X)
                 pred_result = {
                     "prediction": int(y_pred[0]),
-                    "probability": float(y_proba[0, 1]),  # Probabilidade da classe 1 (churn)
+                    "probability": float(y_proba[0, 1]),
                     "confidence": float(y_proba.max()),
                 }
                 logger.info(
@@ -257,13 +304,11 @@ def create_app(model_path: str | None = None) -> FastAPI:
                 }
 
             processing_time = (time.time() - start_time) * 1000
-
             return PredictionResponse(**pred_result, processing_time_ms=processing_time)
 
         except ValueError as e:
             logger.error(f"Erro na validação de features: {e}")
             raise HTTPException(status_code=400, detail=f"Erro ao validar features: {e!s}") from e
-
         except Exception as e:
             logger.error(f"Erro na predição: {e}")
             logger.error(traceback.format_exc())
@@ -290,23 +335,16 @@ def create_app(model_path: str | None = None) -> FastAPI:
         start_time = time.time()
 
         try:
-            # 1. Converter lista de objetos Pydantic para lista de dicts
             samples_list = [
                 s.model_dump() if hasattr(s, "model_dump") else s.dict()
                 for s in request.samples
             ]
-
-            # 2. Converter para DataFrame
             X = pd.DataFrame(samples_list)
-
-            logger.info(f"Batch recebido: {X.shape} - Colunas: {X.columns.tolist()}")
-
-            # 3. Passar para o pipeline (que já faz o preprocessamento)
             y_pred = app.state.pipeline.predict(X)
 
             if request.return_probabilities:
                 y_proba = app.state.pipeline.predict_proba(X)
-                probas = y_proba[:, 1].tolist()  # Probabilidade da classe 1 (churn)
+                probas = y_proba[:, 1].tolist() # Probabilidade da classe 1 (churn)
             else:
                 probas = None
 
@@ -322,7 +360,6 @@ def create_app(model_path: str | None = None) -> FastAPI:
         except ValueError as e:
             logger.error(f"Erro na validação de features: {e}")
             raise HTTPException(status_code=400, detail=f"Erro ao validar features: {e!s}") from e
-
         except Exception as e:
             logger.error(f"Erro na predição em lote: {e}")
             logger.error(traceback.format_exc())
@@ -341,7 +378,6 @@ def create_app(model_path: str | None = None) -> FastAPI:
         if app.state.pipeline is None:
             raise HTTPException(status_code=503, detail="Pipeline não foi carregado")
 
-        # Tentar extrair nomes das features do pipeline
         feature_names = app.state.feature_names
         if not feature_names and hasattr(app.state.pipeline, "named_steps"):
             preprocessor = app.state.pipeline.named_steps.get("preprocessor")
@@ -353,12 +389,12 @@ def create_app(model_path: str | None = None) -> FastAPI:
 
         return ModelInfoResponse(
             model_type="LogisticRegression (com ColumnTransformer)",
-            model_version="1.0.0",
+            model_version="Production",
             n_features=len(feature_names) if feature_names else 0,
             features_used=feature_names,
         )
 
-    # ============ ROOT ============
+    # ============ ROOT E ERROR HANDLERS ============
     @app.get("/", tags=["Root"])
     async def root():
         """Root endpoint com informações da API."""
@@ -395,10 +431,8 @@ def create_app(model_path: str | None = None) -> FastAPI:
 
 
 # Aplicação padrão
-# Tentar carregar modelo do arquivo local, caso não exista, criar app degraded
 _default_model_path = "models/best_model_with_metadata.pkl"
 if os.path.exists(_default_model_path):
     app = create_app(_default_model_path)
 else:
-    # Em desenvolvimento/testes, criar app sem modelo (modo degraded)
     app = create_app(model_path=None)
