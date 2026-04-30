@@ -1,13 +1,4 @@
-"""Telco Churn - MLOps Package."""
-
-from .config import (
-    APIConfig,
-    DataConfig,
-    LoggingConfig,
-    MetricsConfig,
-    ModelConfig,
-    get_config,
-)
+"""Telco Churn."""
 from .data import TelcoDataLoader
 from .evaluation import TelcoMetrics
 from .models import BaselineExperiment

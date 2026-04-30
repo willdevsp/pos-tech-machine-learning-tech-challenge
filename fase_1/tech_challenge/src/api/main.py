@@ -55,13 +55,13 @@ class MLflowPipelineLoader:
         self.categorical_columns = None
         self.numerical_columns = None
 
-    def load_from_mlflow(self, model_name: str = "TelcoChurnPipeline", stage: str = "Production"):
+    def load_from_mlflow(self, model_name: str = "TelcoChurnPipeline", stage: str = "production"):
         """
         Carrega Pipeline do MLflow Model Registry.
 
         Args:
             model_name: Nome do modelo registrado no MLflow
-            stage: Stage do modelo (Production, Staging, etc)
+            stage: Stage do modelo (production, Staging, etc)
 
         Returns:
             True se carregou com sucesso, False caso contrário
@@ -126,14 +126,14 @@ async def wait_and_update_model(target_time: datetime, app: FastAPI):
     logger.info("🚀 Hora alcançada! Iniciando o download e a troca do modelo...")
     new_loader = MLflowPipelineLoader()
 
-    success = new_loader.load_from_mlflow(model_name="TelcoChurnPipeline", stage="Production")
+    success = new_loader.load_from_mlflow(model_name="TelcoChurnPipeline", stage="production")
 
     if success and new_loader.is_loaded():
         # Substitui atomicamente as variáveis na memória do FastAPI
         app.state.pipeline = new_loader.pipeline
         app.state.feature_names = new_loader.get_feature_names()
         logger.info(
-            f"✅ Hot-Swap concluído! API agora está usando o novo modelo em Production. Features: {app.state.feature_names}"
+            f"✅ Hot-Swap concluído! API agora está usando o novo modelo em production. Features: {app.state.feature_names}"
         )
     else:
         logger.error(
@@ -166,7 +166,7 @@ def create_app(model_path: str | None = None) -> FastAPI:
 
             # Tentar carregar do MLflow primeiro
             for attempt in range(max_retries):
-                loader.load_from_mlflow(model_name="TelcoChurnPipeline", stage="Production")
+                loader.load_from_mlflow(model_name="TelcoChurnPipeline", stage="production")
 
                 if loader.is_loaded():
                     app.state.pipeline = loader.pipeline
@@ -400,7 +400,7 @@ def create_app(model_path: str | None = None) -> FastAPI:
 
         return ModelInfoResponse(
             model_type="LogisticRegression (com ColumnTransformer)",
-            model_version="Production",
+            model_version="production",
             n_features=len(feature_names) if feature_names else 0,
             features_used=feature_names,
         )
