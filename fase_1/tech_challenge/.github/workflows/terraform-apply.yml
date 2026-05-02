@@ -1,0 +1,130 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infrastructure/terraform/**'
+      - '.github/workflows/terraform-apply.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: 'Select environment'
+        options:
+          - staging
+          - production
+        default: staging
+      auto_approve:
+        type: boolean
+        description: 'Auto approve terraform apply'
+        default: false
+
+env:
+  AWS_REGION: us-east-1
+  ACCOUNT_ID: 204524745296
+  TERRAFORM_VERSION: 1.7.0
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment || 'staging' }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/github-action-tech-challenge
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENV="${{ github.event.inputs.environment }}"
+          else
+            ENV="staging"
+          fi
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+          echo "Selected environment: $ENV"
+
+      - name: Terraform Init
+        working-directory: infrastructure/terraform
+        run: |
+          terraform init \
+            -backend-config=environments/${{ steps.env.outputs.environment }}/backend.tf \
+            -upgrade
+
+      - name: Terraform Plan
+        working-directory: infrastructure/terraform
+        id: plan
+        run: |
+          terraform plan \
+            -var-file=environments/${{ steps.env.outputs.environment }}/terraform.tfvars \
+            -var="rds_password=${{ secrets.RDS_PASSWORD }}" \
+            -var="mlflow_image_uri=${{ secrets.MLFLOW_IMAGE_URI || format('{0}.dkr.ecr.us-east-1.amazonaws.com/telco-churn-mlflow:latest', env.ACCOUNT_ID) }}" \
+            -var="acm_certificate_arn=${{ secrets.ACM_CERTIFICATE_ARN || 'arn:aws:acm:us-east-1:204524745296:certificate/placeholder' }}" \
+            -out=tfplan
+        continue-on-error: true
+        env:
+          TF_VAR_rds_password: ${{ secrets.RDS_PASSWORD }}
+
+      - name: Terraform Apply (manual approval)
+        if: github.event.inputs.auto_approve != 'true' && steps.plan.outcome == 'success'
+        working-directory: infrastructure/terraform
+        run: |
+          echo "⏳ Waiting for manual approval..."
+          echo "This step requires workflow approval in GitHub Actions"
+          terraform apply -no-color tfplan
+
+      - name: Terraform Apply (auto-approve)
+        if: github.event.inputs.auto_approve == 'true' && steps.plan.outcome == 'success'
+        working-directory: infrastructure/terraform
+        run: |
+          echo "🚀 Auto-approving terraform apply..."
+          terraform apply -auto-approve -no-color tfplan
+
+      - name: Export Terraform Outputs
+        if: success()
+        working-directory: infrastructure/terraform
+        run: |
+          terraform output -json > outputs.json
+          cat outputs.json
+
+      - name: Upload outputs artifact
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-outputs-${{ steps.env.outputs.environment }}
+          path: infrastructure/terraform/outputs.json
+
+      - name: Publish Terraform Outputs to GitHub
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const outputs = JSON.parse(fs.readFileSync('infrastructure/terraform/outputs.json', 'utf8'));
+            
+            let summary = '## 🎉 Terraform Apply Completed\n\n';
+            summary += '### Infrastructure Outputs:\n\n';
+            
+            for (const [key, value] of Object.entries(outputs)) {
+              summary += `- **${key}**: ${JSON.stringify(value.value)}\n`;
+            }
+            
+            core.summary
+              .addRaw(summary)
+              .write();

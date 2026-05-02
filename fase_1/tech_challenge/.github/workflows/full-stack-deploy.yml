@@ -1,0 +1,226 @@
+name: Full Stack Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'Dockerfile*'
+      - 'infrastructure/terraform/**'
+      - '.github/workflows/full-stack-deploy.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: 'Select environment'
+        options:
+          - staging
+          - production
+        default: staging
+
+env:
+  AWS_REGION: us-east-1
+  ACCOUNT_ID: 204524745296
+  TERRAFORM_VERSION: 1.7.0
+
+jobs:
+  # Step 1: Build Docker Images
+  build-docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    outputs:
+      mlflow-image: ${{ steps.images.outputs.mlflow-image }}
+      api-image: ${{ steps.images.outputs.api-image }}
+      training-image: ${{ steps.images.outputs.training-image }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/github-action-tech-challenge
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push MLflow image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.mlflow
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/telco-churn-mlflow:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/telco-churn-mlflow:latest
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.api
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/telco-churn-api:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/telco-churn-api:latest
+
+      - name: Build and push Training image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.training
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/telco-churn-training:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/telco-churn-training:latest
+
+      - name: Output image URIs
+        id: images
+        run: |
+          REGISTRY="${{ steps.login-ecr.outputs.registry }}"
+          echo "mlflow-image=$REGISTRY/telco-churn-mlflow:${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "api-image=$REGISTRY/telco-churn-api:${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "training-image=$REGISTRY/telco-churn-training:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+  # Step 2: Terraform Plan
+  terraform-plan:
+    name: Terraform Plan
+    needs: build-docker
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment || 'staging' }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/github-action-tech-challenge
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Determine environment
+        id: env
+        run: |
+          ENV="${{ github.event.inputs.environment || 'staging' }}"
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+
+      - name: Terraform Init
+        working-directory: infrastructure/terraform
+        run: |
+          terraform init \
+            -backend-config=environments/${{ steps.env.outputs.environment }}/backend.tf
+
+      - name: Terraform Plan
+        working-directory: infrastructure/terraform
+        run: |
+          terraform plan \
+            -var-file=environments/${{ steps.env.outputs.environment }}/terraform.tfvars \
+            -var="mlflow_image_uri=${{ needs.build-docker.outputs.mlflow-image }}" \
+            -var="rds_password=${{ secrets.RDS_PASSWORD }}" \
+            -var="acm_certificate_arn=${{ secrets.ACM_CERTIFICATE_ARN }}" \
+            -out=tfplan
+
+      - name: Upload plan
+        uses: actions/upload-artifact@v3
+        with:
+          name: tfplan
+          path: infrastructure/terraform/tfplan
+
+  # Step 3: Terraform Apply
+  terraform-apply:
+    name: Terraform Apply
+    needs: [build-docker, terraform-plan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: ${{ github.event.inputs.environment || 'staging' }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/github-action-tech-challenge
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Determine environment
+        id: env
+        run: |
+          ENV="${{ github.event.inputs.environment || 'staging' }}"
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+
+      - name: Download plan
+        uses: actions/download-artifact@v3
+        with:
+          name: tfplan
+          path: infrastructure/terraform/
+
+      - name: Terraform Init
+        working-directory: infrastructure/terraform
+        run: |
+          terraform init \
+            -backend-config=environments/${{ steps.env.outputs.environment }}/backend.tf
+
+      - name: Terraform Apply
+        working-directory: infrastructure/terraform
+        run: terraform apply -no-color tfplan
+
+      - name: Export Outputs
+        working-directory: infrastructure/terraform
+        run: terraform output -json > outputs.json
+
+      - name: Upload outputs
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-outputs
+          path: infrastructure/terraform/outputs.json
+
+  # Final Summary
+  summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [build-docker, terraform-plan, terraform-apply]
+    if: always()
+    steps:
+      - name: Print Summary
+        run: |
+          echo "🎉 Full Stack Deployment Complete!"
+          echo ""
+          echo "Docker Images:"
+          echo "  - ${{ needs.build-docker.outputs.mlflow-image }}"
+          echo "  - ${{ needs.build-docker.outputs.api-image }}"
+          echo "  - ${{ needs.build-docker.outputs.training-image }}"
+          echo ""
+          echo "Next Steps:"
+          echo "  1. Check Terraform outputs in artifacts"
+          echo "  2. Verify AWS resources were created"
+          echo "  3. Monitor logs in CloudWatch"
