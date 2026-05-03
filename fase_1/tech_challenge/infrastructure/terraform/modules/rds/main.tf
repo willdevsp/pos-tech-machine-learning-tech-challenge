@@ -140,7 +140,7 @@ resource "aws_kms_alias" "rds" {
 # ====================================================================
 
 resource "aws_iam_role" "rds_monitoring" {
-  name_prefix = "${local.name_prefix}-rds-monitoring-"
+  name_prefix = "${local.name_prefix}-rds-mon-"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
