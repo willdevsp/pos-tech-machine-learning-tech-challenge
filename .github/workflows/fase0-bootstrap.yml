@@ -20,6 +20,7 @@ on:
 env:
   AWS_REGION: us-east-1
   ACCOUNT_ID: 204524745296
+  SCRIPTS_PATH: fase_1/tech_challenge/infrastructure/scripts
 
 jobs:
   bootstrap:
@@ -128,7 +129,7 @@ jobs:
           aws iam put-role-policy \
             --role-name "$ROLE_NAME" \
             --policy-name "$POLICY_NAME" \
-            --policy-document file://fase_1/tech_challenge/infrastructure/scripts/iam-policy.json
+            --policy-document file://${{ env.SCRIPTS_PATH }}/iam-policy.json
           
           echo "✅ IAM Policy applied"
           

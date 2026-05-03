@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/**'
-      - 'Dockerfile*'
-      - 'infrastructure/terraform/**'
+      - 'fase_1/tech_challenge/src/**'
+      - 'fase_1/tech_challenge/Dockerfile*'
+      - 'fase_1/tech_challenge/infrastructure/terraform/**'
       - '.github/workflows/full-stack-deploy.yml'
   workflow_dispatch:
     inputs:
@@ -22,6 +22,7 @@ env:
   AWS_REGION: us-east-1
   ACCOUNT_ID: 204524745296
   TERRAFORM_VERSION: 1.7.0
+  TF_WORKING_DIR: fase_1/tech_challenge/infrastructure/terraform
 
 jobs:
   # Step 1: Build Docker Images
@@ -46,7 +47,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/github-action-tech-challenge
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -56,8 +57,8 @@ jobs:
       - name: Build and push MLflow image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: Dockerfile.mlflow
+          context: fase_1/tech_challenge
+          file: fase_1/tech_challenge/Dockerfile.mlflow
           push: true
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/telco-churn-mlflow:${{ github.sha }}
@@ -66,8 +67,8 @@ jobs:
       - name: Build and push API image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: Dockerfile.api
+          context: fase_1/tech_challenge
+          file: fase_1/tech_challenge/Dockerfile.api
           push: true
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/telco-churn-api:${{ github.sha }}
@@ -76,8 +77,8 @@ jobs:
       - name: Build and push Training image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: Dockerfile.training
+          context: fase_1/tech_challenge
+          file: fase_1/tech_challenge/Dockerfile.training
           push: true
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/telco-churn-training:${{ github.sha }}
@@ -114,7 +115,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/github-action-tech-challenge
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Determine environment
@@ -124,13 +125,13 @@ jobs:
           echo "environment=$ENV" >> $GITHUB_OUTPUT
 
       - name: Terraform Init
-        working-directory: infrastructure/terraform
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           terraform init \
             -backend-config=environments/${{ steps.env.outputs.environment }}/backend.tf
 
       - name: Terraform Plan
-        working-directory: infrastructure/terraform
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           terraform plan \
             -var-file=environments/${{ steps.env.outputs.environment }}/terraform.tfvars \
@@ -143,7 +144,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: tfplan
-          path: infrastructure/terraform/tfplan
+          path: ${{ env.TF_WORKING_DIR }}/tfplan
 
   # Step 3: Terraform Apply
   terraform-apply:
@@ -169,7 +170,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/github-action-tech-challenge
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Determine environment
@@ -182,27 +183,27 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: tfplan
-          path: infrastructure/terraform/
+          path: ${{ env.TF_WORKING_DIR }}/
 
       - name: Terraform Init
-        working-directory: infrastructure/terraform
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           terraform init \
             -backend-config=environments/${{ steps.env.outputs.environment }}/backend.tf
 
       - name: Terraform Apply
-        working-directory: infrastructure/terraform
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -no-color tfplan
 
       - name: Export Outputs
-        working-directory: infrastructure/terraform
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform output -json > outputs.json
 
       - name: Upload outputs
         uses: actions/upload-artifact@v3
         with:
           name: terraform-outputs
-          path: infrastructure/terraform/outputs.json
+          path: ${{ env.TF_WORKING_DIR }}/outputs.json
 
   # Final Summary
   summary:

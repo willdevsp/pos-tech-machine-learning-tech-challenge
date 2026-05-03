@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'infrastructure/terraform/**'
+      - 'fase_1/tech_challenge/infrastructure/terraform/**'
       - '.github/workflows/terraform-plan.yml'
   workflow_dispatch:
     inputs:
@@ -43,7 +43,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/github-action-tech-challenge
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Determine environment
@@ -58,22 +58,22 @@ jobs:
           echo "Selected environment: $ENV"
 
       - name: Terraform Init
-        working-directory: infrastructure/terraform
+        working-directory: fase_1/tech_challenge/infrastructure/terraform
         run: |
           terraform init \
             -backend-config=environments/${{ steps.env.outputs.environment }}/backend.tf \
             -upgrade
 
       - name: Terraform Format Check
-        working-directory: infrastructure/terraform
+        working-directory: fase_1/tech_challenge/infrastructure/terraform
         run: terraform fmt -check
 
       - name: Terraform Validate
-        working-directory: infrastructure/terraform
+        working-directory: fase_1/tech_challenge/infrastructure/terraform
         run: terraform validate
 
       - name: Terraform Plan
-        working-directory: infrastructure/terraform
+        working-directory: fase_1/tech_challenge/infrastructure/terraform
         run: |
           terraform plan \
             -var-file=environments/${{ steps.env.outputs.environment }}/terraform.tfvars \
@@ -88,7 +88,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: tfplan-${{ steps.env.outputs.environment }}
-          path: infrastructure/terraform/tfplan
+          path: fase_1/tech_challenge/infrastructure/terraform/tfplan
 
       - name: Comment PR with plan
         if: github.event_name == 'pull_request'
@@ -96,7 +96,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const planFile = 'infrastructure/terraform/tfplan';
+            const planFile = 'fase_1/tech_challenge/infrastructure/terraform/tfplan';
             
             github.rest.issues.createComment({
               issue_number: context.issue.number,

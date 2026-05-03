@@ -7,10 +7,12 @@ on:
       - 'fase_1/tech_challenge/Dockerfile*'
       - 'fase_1/tech_challenge/src/**'
       - '.github/workflows/docker-build-push.yml'
+  workflow_dispatch
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-1  
+  AWS_REGION: us-east-1
+  ACCOUNT_ID: 204524745296
 
 jobs:
   build-and-push:
@@ -42,7 +44,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/github-action-tech-challenge
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -66,7 +68,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: fase_1/tech_challenge
           file: ${{ matrix.dockerfile.path }}
           push: true
           tags: |

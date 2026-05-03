@@ -46,7 +46,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/github-action-tech-challenge
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Determine environment
@@ -61,14 +61,14 @@ jobs:
           echo "Selected environment: $ENV"
 
       - name: Terraform Init
-        working-directory: infrastructure/terraform
+        working-directory: fase_1/tech_challenge/infrastructure/terraform
         run: |
           terraform init \
             -backend-config=environments/${{ steps.env.outputs.environment }}/backend.tf \
             -upgrade
 
       - name: Terraform Plan
-        working-directory: infrastructure/terraform
+        working-directory: fase_1/tech_challenge/infrastructure/terraform
         id: plan
         run: |
           terraform plan \
@@ -83,7 +83,7 @@ jobs:
 
       - name: Terraform Apply (manual approval)
         if: github.event.inputs.auto_approve != 'true' && steps.plan.outcome == 'success'
-        working-directory: infrastructure/terraform
+        working-directory: fase_1/tech_challenge/infrastructure/terraform
         run: |
           echo "⏳ Waiting for manual approval..."
           echo "This step requires workflow approval in GitHub Actions"
@@ -91,14 +91,14 @@ jobs:
 
       - name: Terraform Apply (auto-approve)
         if: github.event.inputs.auto_approve == 'true' && steps.plan.outcome == 'success'
-        working-directory: infrastructure/terraform
+        working-directory: fase_1/tech_challenge/infrastructure/terraform
         run: |
           echo "🚀 Auto-approving terraform apply..."
           terraform apply -auto-approve -no-color tfplan
 
       - name: Export Terraform Outputs
         if: success()
-        working-directory: infrastructure/terraform
+        working-directory: fase_1/tech_challenge/infrastructure/terraform
         run: |
           terraform output -json > outputs.json
           cat outputs.json
@@ -108,7 +108,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: terraform-outputs-${{ steps.env.outputs.environment }}
-          path: infrastructure/terraform/outputs.json
+          path: fase_1/tech_challenge/infrastructure/terraform/outputs.json
 
       - name: Publish Terraform Outputs to GitHub
         if: success()
@@ -116,7 +116,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const outputs = JSON.parse(fs.readFileSync('infrastructure/terraform/outputs.json', 'utf8'));
+            const outputs = JSON.parse(fs.readFileSync('fase_1/tech_challenge/infrastructure/terraform/outputs.json', 'utf8'));
             
             let summary = '## 🎉 Terraform Apply Completed\n\n';
             summary += '### Infrastructure Outputs:\n\n';
