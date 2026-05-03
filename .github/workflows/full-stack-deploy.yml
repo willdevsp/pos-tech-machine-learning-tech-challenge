@@ -25,8 +25,9 @@ env:
   TF_WORKING_DIR: fase_1/tech_challenge/infrastructure/terraform
 
 jobs:
-  # Step 1: Build Docker Images
+  # Step 1: Build Docker Images (TEMPORARILY DISABLED for faster pipeline)
   build-docker:
+    if: false  # ⚠️ TEMPORARILY DISABLED - Comment out to re-enable
     name: Build Docker Images
     runs-on: ubuntu-latest
     outputs:
@@ -95,7 +96,7 @@ jobs:
   # Step 2: Terraform Plan
   terraform-plan:
     name: Terraform Plan
-    needs: build-docker
+    # needs: build-docker  # ⚠️ DISABLED because build-docker is temporarily disabled
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.event.inputs.environment || 'staging' }}
@@ -135,10 +136,10 @@ jobs:
         run: |
           terraform plan \
             -var-file=environments/${{ steps.env.outputs.environment }}/terraform.tfvars \
-            -var="mlflow_image_uri=${{ needs.build-docker.outputs.mlflow-image }}" \
             -var="rds_password=${{ secrets.RDS_PASSWORD }}" \
             -var="acm_certificate_arn=${{ secrets.ACM_CERTIFICATE_ARN }}" \
             -out=tfplan
+            # -var="mlflow_image_uri=${{ needs.build-docker.outputs.mlflow-image }}" \  # DISABLED with build-docker
 
       - name: Upload plan
         uses: actions/upload-artifact@v4
@@ -217,9 +218,9 @@ jobs:
           echo "🎉 Full Stack Deployment Complete!"
           echo ""
           echo "Docker Images:"
-          echo "  - ${{ needs.build-docker.outputs.mlflow-image }}"
-          echo "  - ${{ needs.build-docker.outputs.api-image }}"
-          echo "  - ${{ needs.build-docker.outputs.training-image }}"
+          echo "  - mlflow-image: (disabled - use existing image from previous build)"
+          echo "  - api-image: (disabled - use existing image from previous build)"
+          echo "  - training-image: (disabled - use existing image from previous build)"
           echo ""
           echo "Next Steps:"
           echo "  1. Check Terraform outputs in artifacts"

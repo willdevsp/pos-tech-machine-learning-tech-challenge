@@ -88,19 +88,3 @@ output "cloudwatch_log_group" {
   description = "CloudWatch log group for RDS"
   value       = aws_cloudwatch_log_group.rds.name
 }
-
-# Autoscaling outputs
-output "autoscaling_target_id" {
-  description = "Application Auto Scaling target ID"
-  value       = aws_appautoscaling_target.rds_target.id
-}
-
-output "cpu_scaling_policy_name" {
-  description = "CPU-based auto scaling policy name"
-  value       = aws_appautoscaling_policy.rds_cpu.name
-}
-
-output "connections_scaling_policy_name" {
-  description = "Connections-based auto scaling policy name"
-  value       = aws_appautoscaling_policy.rds_connections.name
-}
