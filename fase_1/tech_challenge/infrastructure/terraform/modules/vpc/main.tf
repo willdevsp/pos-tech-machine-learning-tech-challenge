@@ -11,7 +11,10 @@ resource "aws_vpc" "main" {
   tags = merge(
     var.tags,
     {
-      Name = "${local.name_prefix}-vpc"
+      Name        = "${local.name_prefix}-vpc"
+      Environment = var.environment
+      Project     = "telco-churn-mlflow"
+      ManagedBy   = "Terraform"
     }
   )
 }
