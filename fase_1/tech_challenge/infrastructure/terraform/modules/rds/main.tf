@@ -196,16 +196,18 @@ resource "aws_rds_cluster_parameter_group" "main" {
   name_prefix = "${local.name_prefix}-aurora-pg-"
   family      = "aurora-postgresql15"
   
-  # Enable logical replication (optional, for CDC/replication)
+  # Enable logical replication (optional, for CDC/replication) - STATIC parameter (requires reboot)
   parameter {
-    name  = "rds.logical_replication"
-    value = "1"
+    name           = "rds.logical_replication"
+    value          = "1"
+    apply_method   = "pending-reboot"
   }
   
-  # Connection pooling
+  # Connection pooling - STATIC parameter (requires reboot)
   parameter {
-    name  = "shared_preload_libraries"
-    value = "pgaudit,pg_stat_statements"
+    name           = "shared_preload_libraries"
+    value          = "pgaudit,pg_stat_statements"
+    apply_method   = "pending-reboot"
   }
   
   tags = merge(
