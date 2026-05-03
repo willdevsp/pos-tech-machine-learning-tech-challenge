@@ -1,41 +1,51 @@
-# VPC Module - To be implemented in FASE 1
+# ====================================================================
+# VPC MODULE - VARIABLES
+# ====================================================================
 
 variable "project_name" {
-  type = string
+  description = "Project name for resource naming"
+  type        = string
 }
 
 variable "environment" {
-  type = string
+  description = "Environment (staging/production)"
+  type        = string
+  validation {
+    condition     = contains(["staging", "production"], var.environment)
+    error_message = "Environment deve ser 'staging' ou 'production'."
+  }
 }
 
 variable "vpc_cidr" {
-  type = string
+  description = "CIDR block for VPC"
+  type        = string
+  validation {
+    condition     = can(cidrhost(var.vpc_cidr, 0))
+    error_message = "vpc_cidr must be a valid CIDR block."
+  }
 }
 
 variable "enable_nat" {
-  type = bool
-  default = true
+  description = "Enable NAT Gateway for private subnets (costs ~$30-45/month)"
+  type        = bool
+  default     = true
 }
 
 variable "availability_zones" {
-  type = list(string)
+  description = "List of availability zones"
+  type        = list(string)
 }
 
 variable "tags" {
-  type = map(string)
-  default = {}
+  description = "Tags to apply to resources"
+  type        = map(string)
+  default     = {}
 }
 
-# TODO: Implementar VPC, Subnets, IGW, NAT, Security Groups
-
-output "vpc_id" {
-  value = "vpc-placeholder"
-}
-
-output "public_subnet_ids" {
-  value = []
-}
-
-output "private_subnet_ids" {
-  value = []
+locals {
+  name_prefix = "${var.project_name}-${var.environment}"
+  
+  # Subnet CIDR calculations
+  public_subnet_cidrs  = [for i in range(3) : cidrsubnet(var.vpc_cidr, 2, i)]
+  private_subnet_cidrs = [for i in range(3) : cidrsubnet(var.vpc_cidr, 2, i + 3)]
 }
