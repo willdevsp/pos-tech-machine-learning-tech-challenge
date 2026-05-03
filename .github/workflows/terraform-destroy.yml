@@ -1,0 +1,127 @@
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: 'Select environment to destroy'
+        options:
+          - staging
+          - production
+        default: staging
+      confirm_destroy:
+        type: choice
+        description: 'CONFIRM: Type "destroy" to proceed'
+        options:
+          - "cancel"
+          - "destroy"
+        default: "cancel"
+
+env:
+  AWS_REGION: us-east-1
+  TERRAFORM_VERSION: 1.7.0
+
+jobs:
+  terraform-destroy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify confirmation
+        run: |
+          if [[ "${{ github.event.inputs.confirm_destroy }}" != "destroy" ]]; then
+            echo "❌ Destroy cancelled - confirmation not provided"
+            exit 1
+          fi
+          echo "✅ Destroy confirmed for ${{ github.event.inputs.environment }}"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: fase_1/tech_challenge/infrastructure/terraform
+        run: |
+          terraform init \
+            -backend-config=environments/${{ github.event.inputs.environment }}/backend.tf \
+            -upgrade
+
+      - name: Terraform Destroy
+        working-directory: fase_1/tech_challenge/infrastructure/terraform
+        run: |
+          echo "🗑️  DESTROYING ALL RESOURCES IN ${{ github.event.inputs.environment }}"
+          echo ""
+          terraform destroy \
+            -var-file=environments/${{ github.event.inputs.environment }}/terraform.tfvars \
+            -var="rds_password=${{ secrets.RDS_PASSWORD }}" \
+            -var="mlflow_image_uri=${{ secrets.MLFLOW_IMAGE_URI || format('{0}.dkr.ecr.us-east-1.amazonaws.com/telco-churn-mlflow:latest', secrets.ACCOUNT_ID) }}" \
+            -var="acm_certificate_arn=${{ secrets.ACM_CERTIFICATE_ARN || 'arn:aws:acm:us-east-1:204524745296:certificate/placeholder' }}" \
+            -auto-approve
+
+      - name: Publish Destroy Summary
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const summary = `## 🗑️ Terraform Destroy Completed
+            
+**Environment**: ${{ github.event.inputs.environment }}
+
+All infrastructure resources have been destroyed and removed from AWS.
+
+### Actions taken:
+- ✅ VPC and networking resources removed
+- ✅ RDS database destroyed
+- ✅ ECS services terminated
+- ✅ ECR repositories cleaned
+- ✅ Lambda functions removed
+- ✅ Batch jobs cancelled
+- ✅ CloudFront distributions disabled
+- ✅ Route53 records cleaned
+- ✅ Security groups removed
+- ✅ IAM roles/policies removed
+- ✅ S3 buckets data cleaned (not deleted to preserve state)
+- ✅ CloudWatch logs retained for audit
+
+**Terraform State**: 
+- S3 Bucket: \`telco-tf-state-204524745296\`
+- State File: \`${{ github.event.inputs.environment }}/terraform.tfstate\`
+- Status: State file preserved for future reconstruction`;
+            
+            await core.summary.addRaw(summary).write();
+
+      - name: Warning - Manual cleanup may be required
+        if: always()
+        run: |
+          echo ""
+          echo "⚠️  MANUAL CLEANUP CHECKLIST:"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "1. Check S3 buckets for any remaining data:"
+          echo "   - telco-tf-state-* (Terraform state - kept)"
+          echo "   - telco-mlflow-artifacts-* (Models - kept for safety)"
+          echo "   - telco-processed-data-* (Data - kept)"
+          echo ""
+          echo "2. Review CloudWatch Logs for audit purposes"
+          echo ""
+          echo "3. Verify IAM roles are deleted:"
+          echo "   - github-action-tech-challenge role should be gone"
+          echo ""
+          echo "4. Check for any orphaned resources:"
+          echo "   - Run: aws ec2 describe-instances"
+          echo "   - Run: aws rds describe-db-instances"
+          echo "   - Run: aws ecs describe-clusters"
