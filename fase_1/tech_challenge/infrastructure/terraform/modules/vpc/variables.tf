@@ -45,7 +45,10 @@ variable "tags" {
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
   
-  # Subnet CIDR calculations
-  public_subnet_cidrs  = [for i in range(3) : cidrsubnet(var.vpc_cidr, 2, i)]
-  private_subnet_cidrs = [for i in range(3) : cidrsubnet(var.vpc_cidr, 2, i + 3)]
+  # Limitar subnets ao número de AZs (máximo 3 por melhor prática)
+  subnet_count = min(3, length(var.availability_zones))
+  
+  # Subnet CIDR calculations (usando /3 para aceitar até 8 subnets: 4 públicas + 4 privadas)
+  public_subnet_cidrs  = [for i in range(local.subnet_count) : cidrsubnet(var.vpc_cidr, 3, i)]
+  private_subnet_cidrs = [for i in range(local.subnet_count) : cidrsubnet(var.vpc_cidr, 3, i + local.subnet_count)]
 }

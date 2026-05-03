@@ -33,7 +33,7 @@ resource "aws_internet_gateway" "main" {
 # ====================================================================
 
 resource "aws_subnet" "public" {
-  count             = length(var.availability_zones)
+  count             = local.subnet_count
   vpc_id            = aws_vpc.main.id
   cidr_block        = local.public_subnet_cidrs[count.index]
   availability_zone = var.availability_zones[count.index]
@@ -54,7 +54,7 @@ resource "aws_subnet" "public" {
 # ====================================================================
 
 resource "aws_subnet" "private" {
-  count             = length(var.availability_zones)
+  count             = local.subnet_count
   vpc_id            = aws_vpc.main.id
   cidr_block        = local.private_subnet_cidrs[count.index]
   availability_zone = var.availability_zones[count.index]
@@ -73,7 +73,7 @@ resource "aws_subnet" "private" {
 # ====================================================================
 
 resource "aws_eip" "nat" {
-  count    = var.enable_nat ? length(var.availability_zones) : 0
+  count    = var.enable_nat ? local.subnet_count : 0
   domain   = "vpc"
   depends_on = [aws_internet_gateway.main]
 
@@ -90,7 +90,7 @@ resource "aws_eip" "nat" {
 # ====================================================================
 
 resource "aws_nat_gateway" "main" {
-  count         = var.enable_nat ? length(var.availability_zones) : 0
+  count         = var.enable_nat ? local.subnet_count : 0
   allocation_id = aws_eip.nat[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
 
@@ -125,7 +125,7 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public" {
-  count          = length(aws_subnet.public)
+  count          = local.subnet_count
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
@@ -135,7 +135,7 @@ resource "aws_route_table_association" "public" {
 # ====================================================================
 
 resource "aws_route_table" "private" {
-  count  = length(var.availability_zones)
+  count  = local.subnet_count
   vpc_id = aws_vpc.main.id
 
   tags = merge(
@@ -148,14 +148,14 @@ resource "aws_route_table" "private" {
 
 # Add route to NAT Gateway if enabled, otherwise VPC is isolated
 resource "aws_route" "private_nat" {
-  count                  = var.enable_nat ? length(var.availability_zones) : 0
+  count                  = var.enable_nat ? local.subnet_count : 0
   route_table_id         = aws_route_table.private[count.index].id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.main[count.index].id
 }
 
 resource "aws_route_table_association" "private" {
-  count          = length(aws_subnet.private)
+  count          = local.subnet_count
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private[count.index].id
 }
