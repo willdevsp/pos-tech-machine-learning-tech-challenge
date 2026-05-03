@@ -19,7 +19,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ACCOUNT_ID: 204524745296
+ 
   SCRIPTS_PATH: fase_1/tech_challenge/infrastructure/scripts
 
 jobs:
@@ -38,19 +38,19 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/github-action-tech-challenge
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Verify AWS access
         run: |
           echo "✅ AWS credentials configured"
           aws sts get-caller-identity
-          echo "Account ID: ${{ env.ACCOUNT_ID }}"
+          echo "Account ID: ${{ secrets.ACCOUNT_ID }}"
           echo "Region: ${{ env.AWS_REGION }}"
 
       - name: Create S3 bucket for Terraform state
         run: |
-          BUCKET_NAME="telco-tf-state-${{ env.ACCOUNT_ID }}"
+          BUCKET_NAME="telco-tf-state-${{ secrets.ACCOUNT_ID }}"
           
           echo "📦 Creating S3 bucket: $BUCKET_NAME"
           
@@ -139,7 +139,7 @@ jobs:
 
       - name: Validate bootstrap
         run: |
-          BUCKET_NAME="telco-tf-state-${{ env.ACCOUNT_ID }}"
+          BUCKET_NAME="telco-tf-state-${{ secrets.ACCOUNT_ID }}"
           LOCK_TABLE="telco-tf-locks"
           
           echo "✅ Validating FASE 0 bootstrap..."

@@ -22,7 +22,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ACCOUNT_ID: 204524745296
+ 
   TERRAFORM_VERSION: 1.7.0
 
 jobs:
