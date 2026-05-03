@@ -116,15 +116,29 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const outputs = JSON.parse(fs.readFileSync('fase_1/tech_challenge/infrastructure/terraform/outputs.json', 'utf8'));
+            const path = require('path');
             
-            let summary = '## 🎉 Terraform Apply Completed\n\n';
-            summary += '### Infrastructure Outputs:\n\n';
+            const outputPath = 'fase_1/tech_challenge/infrastructure/terraform/outputs.json';
             
-            for (const [key, value] of Object.entries(outputs)) {
-              summary += `- **${key}**: ${JSON.stringify(value.value)}\n`;
+            if (!fs.existsSync(outputPath)) {
+              console.log('⚠️  outputs.json not found at:', outputPath);
+              core.summary.addRaw('## ⚠️ Terraform Outputs\n\nNo outputs file found.').write();
+              process.exit(0);
             }
             
-            core.summary
-              .addRaw(summary)
-              .write();
+            try {
+              const outputs = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
+              
+              let summary = '## 🎉 Terraform Apply Completed\n\n';
+              summary += '### Infrastructure Outputs:\n\n';
+              
+              for (const [key, value] of Object.entries(outputs)) {
+                summary += `- **${key}**: ${JSON.stringify(value.value)}\n`;
+              }
+              
+              core.summary.addRaw(summary).write();
+            } catch (error) {
+              console.error('Error parsing outputs:', error.message);
+              core.summary.addRaw('## ❌ Error Publishing Outputs\n\n' + error.message).write();
+              process.exit(1);
+            }
