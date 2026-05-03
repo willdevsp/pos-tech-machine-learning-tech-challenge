@@ -150,7 +150,7 @@ jobs:
   # Step 3: Terraform Apply
   terraform-apply:
     name: Terraform Apply
-    needs: [build-docker, terraform-plan]
+    needs: [terraform-plan]  # ⚠️ Removed build-docker since it's disabled
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment:
@@ -210,7 +210,7 @@ jobs:
   summary:
     name: Deployment Summary
     runs-on: ubuntu-latest
-    needs: [build-docker, terraform-plan, terraform-apply]
+    needs: [terraform-plan, terraform-apply]  # ⚠️ Removed build-docker since it's disabled
     if: always()
     steps:
       - name: Print Summary
