@@ -33,6 +33,8 @@ provider "aws" {
 
 data "aws_caller_identity" "current" {}
 
+data "aws_region" "current" {}
+
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -257,6 +259,7 @@ variable "rds_password" {
 variable "mlflow_image_uri" {
   description = "URI da imagem Docker MLflow no ECR"
   type        = string
+  default     = ""
 }
 
 variable "parent_domain" {

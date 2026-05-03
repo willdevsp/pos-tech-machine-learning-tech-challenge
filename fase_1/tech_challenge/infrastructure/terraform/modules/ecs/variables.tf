@@ -21,7 +21,8 @@ variable "private_subnet_ids" {
 }
 
 variable "mlflow_image_uri" {
-  type = string
+  type    = string
+  default = ""
 }
 
 variable "mlflow_port" {
