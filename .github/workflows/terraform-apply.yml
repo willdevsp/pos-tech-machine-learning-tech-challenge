@@ -105,7 +105,7 @@ jobs:
 
       - name: Upload outputs artifact
         if: success()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: terraform-outputs-${{ steps.env.outputs.environment }}
           path: fase_1/tech_challenge/infrastructure/terraform/outputs.json

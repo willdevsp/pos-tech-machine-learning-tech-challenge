@@ -85,7 +85,7 @@ jobs:
           TF_VAR_rds_password: ${{ secrets.RDS_PASSWORD }}
 
       - name: Upload plan artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tfplan-${{ steps.env.outputs.environment }}
           path: fase_1/tech_challenge/infrastructure/terraform/tfplan
