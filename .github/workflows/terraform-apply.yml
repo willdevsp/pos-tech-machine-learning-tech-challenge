@@ -46,7 +46,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/github-action-tech-challenge
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Determine environment
@@ -74,7 +74,7 @@ jobs:
           terraform plan \
             -var-file=environments/${{ steps.env.outputs.environment }}/terraform.tfvars \
             -var="rds_password=${{ secrets.RDS_PASSWORD }}" \
-            -var="mlflow_image_uri=${{ secrets.MLFLOW_IMAGE_URI || format('{0}.dkr.ecr.us-east-1.amazonaws.com/telco-churn-mlflow:latest', env.ACCOUNT_ID) }}" \
+            -var="mlflow_image_uri=${{ secrets.MLFLOW_IMAGE_URI || format('{0}.dkr.ecr.us-east-1.amazonaws.com/telco-churn-mlflow:latest', secrets.ACCOUNT_ID) }}" \
             -var="acm_certificate_arn=${{ secrets.ACM_CERTIFICATE_ARN || 'arn:aws:acm:us-east-1:204524745296:certificate/placeholder' }}" \
             -out=tfplan
         continue-on-error: true

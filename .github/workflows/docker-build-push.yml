@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'Dockerfile*'
-      - 'src/**'
+      - 'fase_1/tech_challenge/Dockerfile*'
+      - 'fase_1/tech_challenge/src/**'
       - '.github/workflows/docker-build-push.yml'
   workflow_dispatch:
 
@@ -23,13 +23,13 @@ jobs:
       matrix:
         dockerfile:
           - name: mlflow
-            path: Dockerfile.mlflow
+            path: fase_1/tech_challenge/Dockerfile.mlflow
             repo: telco-churn-mlflow
           - name: api
-            path: Dockerfile.api
+            path: fase_1/tech_challenge/Dockerfile.api
             repo: telco-churn-api
           - name: training
-            path: Dockerfile.training
+            path: fase_1/tech_challenge/Dockerfile.training
             repo: telco-churn-training
 
     steps:
