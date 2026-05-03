@@ -58,7 +58,7 @@ resource "aws_rds_cluster" "main" {
   
   # Other configurations
   skip_final_snapshot             = false
-  final_snapshot_identifier       = "${local.name_prefix}-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
+  final_snapshot_identifier       = "${local.name_prefix}-snap-${formatdate("YYYYMMDDhhmm", timeadd(timestamp(), "0s"))}"
   copy_tags_to_snapshot           = true
   
   # Enhanced monitoring (optional but recommended)

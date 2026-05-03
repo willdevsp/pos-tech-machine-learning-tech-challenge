@@ -76,6 +76,15 @@ variable "enable_nat_gateway" {
   default     = true
 }
 
+variable "tags" {
+  description = "Tags globais para aplicar em todos os recursos"
+  type        = map(string)
+  default = {
+    Project = "telco-churn-mlflow"
+    ManagedBy = "terraform"
+  }
+}
+
 # ====================================================================
 # OUTPUTS GLOBAIS
 # ====================================================================
@@ -109,9 +118,12 @@ module "vpc" {
   enable_nat      = var.enable_nat_gateway
   availability_zones = data.aws_availability_zones.available.names
 
-  tags = {
-    Name = "${var.project_name}-vpc"
-  }
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.project_name}-vpc"
+    }
+  )
 }
 
 # FASE 2: RDS (Aurora Serverless v2)
@@ -129,9 +141,12 @@ module "rds" {
   db_username = "mlflow"
   db_password = var.rds_password
   
-  tags = {
-    Name = "${var.project_name}-db"
-  }
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.project_name}-db"
+    }
+  )
 
   depends_on = [module.vpc]
 }
@@ -149,9 +164,12 @@ module "ecr" {
     training = { name = "telco-churn-training" }
   }
 
-  tags = {
-    Name = "${var.project_name}-ecr"
-  }
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.project_name}-ecr"
+    }
+  )
 }
 
 # FASE 4: ECS + MLflow
@@ -185,9 +203,12 @@ module "route53" {
   parent_domain    = var.parent_domain
   subdomain        = "tech-challenge"
   
-  tags = {
-    Name = "${var.project_name}-route53"
-  }
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.project_name}-route53"
+    }
+  )
 }
 
 module "cloudfront" {
@@ -202,9 +223,12 @@ module "cloudfront" {
   
   acm_certificate_arn = var.acm_certificate_arn
 
-  tags = {
-    Name = "${var.project_name}-cloudfront"
-  }
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.project_name}-cloudfront"
+    }
+  )
 
   depends_on = [module.route53, module.ecs]
 }
@@ -241,9 +265,12 @@ module "s3" {
     rds_backups = "telco-rds-backups"
   }
 
-  tags = {
-    Name = "${var.project_name}-s3"
-  }
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.project_name}-s3"
+    }
+  )
 }
 
 # ====================================================================
@@ -265,9 +292,11 @@ variable "mlflow_image_uri" {
 variable "parent_domain" {
   description = "Domínio pai para delegação (ex: asgardprint.com.br)"
   type        = string
+  default     = "asgardprint.com.br"  # Default para staging/dev
 }
 
 variable "acm_certificate_arn" {
   description = "ARN do certificado ACM para HTTPS"
   type        = string
+  default     = ""  # Será preenchido em Fase 5 (CloudFront)
 }
