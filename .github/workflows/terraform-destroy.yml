@@ -82,21 +82,9 @@ jobs:
             
 **Environment**: ${{ github.event.inputs.environment }}
 
-All infrastructure resources have been destroyed and removed from AWS.
+Terraform destroy completed successfully.
 
-### Actions taken:
-- ✅ VPC and networking resources removed
-- ✅ RDS database destroyed
-- ✅ ECS services terminated
-- ✅ ECR repositories cleaned
-- ✅ Lambda functions removed
-- ✅ Batch jobs cancelled
-- ✅ CloudFront distributions disabled
-- ✅ Route53 records cleaned
-- ✅ Security groups removed
-- ✅ IAM roles/policies removed
-- ✅ S3 buckets data cleaned (not deleted to preserve state)
-- ✅ CloudWatch logs retained for audit
+All resources defined in Terraform configuration have been destroyed and removed from AWS.
 
 **Terraform State**: 
 - S3 Bucket: telco-tf-state-204524745296
