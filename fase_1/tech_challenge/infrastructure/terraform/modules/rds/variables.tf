@@ -1,49 +1,57 @@
-# RDS Module - To be implemented in FASE 2
+# ====================================================================
+# RDS MODULE - VARIABLES
+# ====================================================================
 
 variable "project_name" {
-  type = string
+  description = "Project name for resource naming"
+  type        = string
 }
 
 variable "environment" {
-  type = string
+  description = "Environment (staging/production)"
+  type        = string
 }
 
 variable "vpc_id" {
-  type = string
+  description = "VPC ID where RDS will be deployed"
+  type        = string
 }
 
 variable "private_subnet_ids" {
-  type = list(string)
+  description = "List of private subnet IDs for RDS cluster"
+  type        = list(string)
+}
+
+variable "availability_zones" {
+  description = "List of availability zones for multi-AZ deployment"
+  type        = list(string)
+}
+
+variable "rds_security_group_id" {
+  description = "Security group ID for RDS database"
+  type        = string
 }
 
 variable "db_name" {
-  type = string
+  description = "Initial database name"
+  type        = string
+  default     = "telco_churn"
 }
 
 variable "db_username" {
-  type = string
+  description = "Master database username"
+  type        = string
+  default     = "mlflow"
 }
 
 variable "db_password" {
-  type      = string
-  sensitive = true
+  description = "Master database password (should be stored in AWS Secrets Manager)"
+  type        = string
+  sensitive   = true
 }
 
 variable "tags" {
-  type = map(string)
-  default = {}
-}
-
-# TODO: Implementar Aurora Serverless v2
-
-output "endpoint" {
-  value = "db-placeholder.c123456.us-east-1.rds.amazonaws.com"
-}
-
-output "port" {
-  value = 5432
-}
-
-output "database_name" {
-  value = var.db_name
+  description = "Tags to apply to RDS resources"
+  type        = map(string)
+  default     = {}
 }

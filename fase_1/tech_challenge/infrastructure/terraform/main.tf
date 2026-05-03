@@ -116,14 +116,16 @@ module "vpc" {
 module "rds" {
   source = "./modules/rds"
 
-  project_name       = var.project_name
-  environment        = var.environment
-  vpc_id             = module.vpc.vpc_id
-  private_subnet_ids = module.vpc.private_subnet_ids
+  project_name           = var.project_name
+  environment            = var.environment
+  vpc_id                 = module.vpc.vpc_id
+  private_subnet_ids     = module.vpc.private_subnet_ids
+  availability_zones     = data.aws_availability_zones.available.names
+  rds_security_group_id  = module.vpc.rds_security_group_id
   
   db_name     = "telco_churn"
   db_username = "mlflow"
-  db_password = var.rds_password  # Usar secrets manager
+  db_password = var.rds_password
   
   tags = {
     Name = "${var.project_name}-db"
