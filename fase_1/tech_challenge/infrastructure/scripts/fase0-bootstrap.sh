@@ -124,7 +124,7 @@ echo ""
 # ====================================================================
 echo -e "${YELLOW}Step 4/5: Aplicando IAM Policy ao role...${NC}"
 
-ROLE_NAME="github-action-tech-challenge"
+ROLE_NAME=${{ secrets.AWS_ROLE_ARN }}
 POLICY_FILE="./iam-policy.json"
 
 if [ ! -f "$POLICY_FILE" ]; then
