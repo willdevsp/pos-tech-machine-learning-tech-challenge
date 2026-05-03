@@ -118,27 +118,33 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             
-            const outputPath = 'fase_1/tech_challenge/infrastructure/terraform/outputs.json';
+            const workspaceRoot = process.env.GITHUB_WORKSPACE || '.';
+            const outputPath = path.join(workspaceRoot, 'fase_1/tech_challenge/infrastructure/terraform/outputs.json');
+            
+            core.info(`Reading outputs from: ${outputPath}`);
             
             if (!fs.existsSync(outputPath)) {
-              console.log('⚠️  outputs.json not found at:', outputPath);
-              core.summary.addRaw('## ⚠️ Terraform Outputs\n\nNo outputs file found.').write();
-              process.exit(0);
+              core.warning(`outputs.json not found at: ${outputPath}`);
+              await core.summary.addRaw('## ⚠️ Terraform Outputs\n\nNo outputs file found.').write();
+              return;
             }
             
             try {
-              const outputs = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
+              const fileContent = fs.readFileSync(outputPath, 'utf8');
+              core.info(`File content length: ${fileContent.length}`);
+              
+              const outputs = JSON.parse(fileContent);
+              core.info('Successfully parsed outputs.json');
               
               let summary = '## 🎉 Terraform Apply Completed\n\n';
               summary += '### Infrastructure Outputs:\n\n';
               
-              for (const [key, value] of Object.entries(outputs)) {
+              Object.entries(outputs).forEach(([key, value]) => {
                 summary += `- **${key}**: ${JSON.stringify(value.value)}\n`;
-              }
+              });
               
-              core.summary.addRaw(summary).write();
+              await core.summary.addRaw(summary).write();
             } catch (error) {
-              console.error('Error parsing outputs:', error.message);
-              core.summary.addRaw('## ❌ Error Publishing Outputs\n\n' + error.message).write();
-              process.exit(1);
+              core.error(`Error reading/parsing outputs: ${error.message}`);
+              await core.summary.addRaw(`## ❌ Error Publishing Outputs\n\n\`\`\`\n${error.message}\n\`\`\``).write();
             }
