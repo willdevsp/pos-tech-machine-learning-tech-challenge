@@ -113,7 +113,7 @@ jobs:
 
       - name: Apply IAM Policy to role
         run: |
-          ROLE_NAME="github-action-tech-challenge"
+          ROLE_NAME=${{ secrets.AWS_ROLE_ARN }}
           POLICY_NAME="TechChallengeTerraformPolicy"
           
           echo "📋 Applying IAM Policy to role: $ROLE_NAME"
@@ -155,7 +155,7 @@ jobs:
           fi
           
           # Validate IAM Role
-          if aws iam get-role --role-name "github-action-tech-challenge" &>/dev/null; then
+          if aws iam get-role --role-name ${{ secrets.AWS_ROLE_ARN }} &>/dev/null; then
             echo "✅ IAM Role: OK"
           fi
           
