@@ -99,8 +99,8 @@ All infrastructure resources have been destroyed and removed from AWS.
 - ✅ CloudWatch logs retained for audit
 
 **Terraform State**: 
-- S3 Bucket: \`telco-tf-state-204524745296\`
-- State File: \`${{ github.event.inputs.environment }}/terraform.tfstate\`
+- S3 Bucket: telco-tf-state-204524745296
+- State File: ${{ github.event.inputs.environment }}/terraform.tfstate
 - Status: State file preserved for future reconstruction`;
             
             await core.summary.addRaw(summary).write();
