@@ -51,7 +51,15 @@
       "Sid": "EC2FullAccess",
       "Effect": "Allow",
       "Action": [
-        "ec2:*"
+        "ec2:*",
+        "ec2:DescribeAvailabilityZones",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DescribeInstances",
+        "ec2:DescribeVpcs",
+        "ec2:DescribeNetworkAcls",
+        "ec2:DescribeRouteTables"
       ],
       "Resource": "*"
     },
