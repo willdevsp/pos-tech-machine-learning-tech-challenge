@@ -1,18 +1,49 @@
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: mlflow_database
+    environment:
+      POSTGRES_USER: mlflow_user
+      POSTGRES_PASSWORD: mlflow_password
+      POSTGRES_DB: mlflow_database
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mlflow_user -d mlflow_database"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   mlflow-server:
-    image: ghcr.io/mlflow/mlflow:v3.10.1
+    build: .
     container_name: mlflow-server
+    depends_on:
+      db:
+        condition: service_healthy    
     ports:
       - "5000:5000"
-    command: >
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql+psycopg2://mlflow_user:mlflow_password@db:5432/mlflow_database
+      - MLFLOW_TRACKING_STORE_URI=postgresql+psycopg2://mlflow_user:mlflow_password@db:5432/mlflow_database
+      - MLFLOW_ALLOWED_HOSTS=*
+      - MLFLOW_CORS_ALLOWED_ORIGINS=*
+    command: >      
       mlflow server
       --host 0.0.0.0
+      --default-artifact-root /mlartifacts
+      --serve-artifacts
       --port 5000
-      --backend-store-uri sqlite:///mlflow/mlflow.db
-      --artifacts-destination /mlflow/artifacts
     volumes:
-      - mlflow_data:/mlflow
-    restart: always
+      - ./mlartifacts:/mlartifacts
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
 
 volumes:
-  mlflow_data:
+  postgres_data:
+    driver: local

@@ -4,7 +4,7 @@ import os
 import threading
 import time
 
-import mlflow.pyfunc
+import mlflow
 import pandas as pd
 from loguru import logger
 
@@ -36,62 +36,17 @@ class RecommendationService:
         """Loads the MLflow model from the tracking server."""
         try:
             # Use MLflow Client to check for the version with stage=Production tag
-            from mlflow.tracking import MlflowClient
-            client = MlflowClient()
-            versions = client.search_model_versions("name='rocket_tail_model'")
-            prod_version_obj = None
-            for v in versions:
-                if v.tags.get("stage") == "Production":
-                    prod_version_obj = v
-                    break
+            tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000")
+            mlflow.set_tracking_uri(tracking_uri)            
 
-            if prod_version_obj is None:
-                logger.warning("No model version with stage=Production tag found in MLflow.")
-                # Fallback to local files if MLflow server load failed
-                if self.model is None:
-                    self._load_fallback_model()
-                return
-
-            latest_version = prod_version_obj.version
-
-            if self.current_model_version == latest_version:
-                logger.debug("Model version unchanged. Skipping reload.")
-                return
-
-            model_uri = f"models:/rocket_tail_model/{latest_version}"
+            model_uri = f"models:/rocket_tail_model@Production"
             logger.info(f"Attempting to load MLflow model from URI: {model_uri}")
-            new_model = mlflow.pyfunc.load_model(model_uri)
-            self.model = new_model
-            self.current_model_version = latest_version
-            logger.info(f"Custom end-to-end MLflow model loaded successfully. Version: {self.current_model_version}")
+            new_model = mlflow.sklearn.load_model(model_uri)
+            self.model = new_model            
+            logger.info(f"Custom end-to-end MLflow model loaded successfully.")
         except Exception as e:
             logger.error(f"Failed to load MLflow model from tag stage=Production. Error: {e}")
-
-            # Fallback to local files if MLflow server load failed
-            if self.model is None:
-                self._load_fallback_model()
-
-    def _load_fallback_model(self) -> None:
-        """Loads local fallback model."""
-        run_id_file = "models/latest_run_id.txt"
-        model_uri = None
-
-        if os.path.exists(run_id_file):
-            with open(run_id_file) as f:
-                run_id = f.read().strip()
-                if run_id:
-                    model_uri = f"runs:/{run_id}/model"
-
-        if model_uri:
-            try:
-                logger.info(f"Loading local fallback MLflow model from URI: {model_uri}")
-                self.model = mlflow.pyfunc.load_model(model_uri)
-                logger.info("Local fallback model loaded successfully.")
-            except Exception as ex:
-                logger.error(f"Failed to load fallback MLflow model from {model_uri}. Error: {ex}")
-                logger.warning("Inference will use popularity fallback model.")
-        else:
-            logger.warning("No local fallback run ID found. Inference will use popularity fallback model.")
+            raise e
 
     def _poll_model_updates(self) -> None:
         """Periodically polls MLflow for model updates."""

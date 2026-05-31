@@ -48,14 +48,14 @@ stages:
       size: 188
     - path: src/rocket_tail_training/train.py
       hash: md5
-      md5: 2897ca18c64c5989c57ac12a343d68c1
-      size: 9768
+      md5: 7bcc47bb1a701eb5806e3ea0b8e74dd4
+      size: 10620
     outs:
     - path: metrics.json
       hash: md5
-      md5: 6cd98586eb5e72aae1cd6325239d372e
-      size: 147
+      md5: c8da37a5cc612980ab67e219eaf650d4
+      size: 146
     - path: models/model.pt
       hash: md5
-      md5: bcddc12019aa2b09a06946b752a3c4ce
+      md5: 92e49ffefc1bd49ad72d857cb88c72d4
       size: 471834
