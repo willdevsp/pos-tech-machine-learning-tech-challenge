@@ -37,7 +37,6 @@ class RecommendationService:
         """Loads the MLflow model from the tracking server."""
         try:
             logger.info(f"Attempting to load MLflow model from URI: {self.model_alias_uri}")
-            mlflow.pyfunc.set_env({})  # Avoid environment restore issues in this context
 
             # Use MLflow Client to check if there is a new version before downloading the entire model
             from mlflow.tracking import MlflowClient
@@ -78,7 +77,6 @@ class RecommendationService:
         if model_uri:
             try:
                 logger.info(f"Loading local fallback MLflow model from URI: {model_uri}")
-                mlflow.pyfunc.set_env({})
                 self.model = mlflow.pyfunc.load_model(model_uri)
                 logger.info("Local fallback model loaded successfully.")
             except Exception as ex:
