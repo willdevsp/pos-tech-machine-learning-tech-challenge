@@ -13,7 +13,7 @@ COPY api /api
 # Build wheels for shared and api packages
 RUN pip install --no-cache-dir --upgrade pip
 RUN pip wheel --no-cache-dir --wheel-dir=/build/wheels /shared
-RUN pip wheel --no-cache-dir --wheel-dir=/build/wheels /api
+RUN pip wheel --no-cache-dir --wheel-dir=/build/wheels --find-links=/build/wheels /api
 
 # Stage 2: Runtime image
 FROM python:3.10-slim
