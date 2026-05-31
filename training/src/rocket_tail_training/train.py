@@ -242,13 +242,30 @@ def main() -> None:
             )
             run_id = run.info.run_id
 
-            # Set Production alias/tag for the registered model
+            # Set Production tag for the registered model version (MLflow 3.x tag-based stage management)
             from mlflow.tracking import MlflowClient
             client = MlflowClient()
-            model_version = client.get_latest_versions("rocket_tail_model", stages=["None"])[0].version
-            client.set_registered_model_alias("rocket_tail_model", "Production", model_version)
 
-            logger.info(f"Logged custom end-to-end model to MLflow with run ID: {run_id} and set as Production alias")
+            # Fetch all versions and select the highest version number
+            versions = client.search_model_versions("name='rocket_tail_model'")
+            if versions:
+                model_version = max(versions, key=lambda x: int(x.version)).version
+            else:
+                model_version = "1"
+
+            # Remove stage=Production tag from any other versions
+            for v in versions:
+                if v.tags.get("stage") == "Production":
+                    try:
+                        client.delete_model_version_tag("rocket_tail_model", v.version, "stage")
+                        logger.info(f"Removed Production tag from older version {v.version}")
+                    except Exception as tag_err:
+                        logger.warning(f"Could not remove tag from version {v.version}: {tag_err}")
+
+            # Assign stage=Production tag to the newly registered version
+            client.set_model_version_tag("rocket_tail_model", model_version, "stage", "Production")
+
+            logger.info(f"Logged custom end-to-end model to MLflow with run ID: {run_id} and set stage=Production tag")
             # Save run ID to local file for API service loading
             with open("models/latest_run_id.txt", "w") as f:
                 f.write(run_id)

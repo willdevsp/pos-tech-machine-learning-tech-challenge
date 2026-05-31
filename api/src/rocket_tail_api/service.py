@@ -24,7 +24,6 @@ class RecommendationService:
 
         # Track currently loaded version to avoid unnecessary reloads
         self.current_model_version = None
-        self.model_alias_uri = "models:/rocket_tail_model@Production"
 
         # Initial synchronous model load
         self._load_model()
@@ -36,28 +35,37 @@ class RecommendationService:
     def _load_model(self) -> None:
         """Loads the MLflow model from the tracking server."""
         try:
-            logger.info(f"Attempting to load MLflow model from URI: {self.model_alias_uri}")
-
-            # Use MLflow Client to check if there is a new version before downloading the entire model
+            # Use MLflow Client to check for the version with stage=Production tag
             from mlflow.tracking import MlflowClient
-            try:
-                client = MlflowClient()
-                model_version_details = client.get_model_version_by_alias("rocket_tail_model", "Production")
-                latest_version = model_version_details.version
+            client = MlflowClient()
+            versions = client.search_model_versions("name='rocket_tail_model'")
+            prod_version_obj = None
+            for v in versions:
+                if v.tags.get("stage") == "Production":
+                    prod_version_obj = v
+                    break
 
-                if self.current_model_version == latest_version:
-                    logger.debug("Model version unchanged. Skipping reload.")
-                    return
-            except Exception as e:
-                logger.debug(f"Could not check version alias, continuing to load: {e}")
-                latest_version = None
+            if prod_version_obj is None:
+                logger.warning("No model version with stage=Production tag found in MLflow.")
+                # Fallback to local files if MLflow server load failed
+                if self.model is None:
+                    self._load_fallback_model()
+                return
 
-            new_model = mlflow.pyfunc.load_model(self.model_alias_uri)
+            latest_version = prod_version_obj.version
+
+            if self.current_model_version == latest_version:
+                logger.debug("Model version unchanged. Skipping reload.")
+                return
+
+            model_uri = f"models:/rocket_tail_model/{latest_version}"
+            logger.info(f"Attempting to load MLflow model from URI: {model_uri}")
+            new_model = mlflow.pyfunc.load_model(model_uri)
             self.model = new_model
             self.current_model_version = latest_version
             logger.info(f"Custom end-to-end MLflow model loaded successfully. Version: {self.current_model_version}")
         except Exception as e:
-            logger.error(f"Failed to load MLflow model from {self.model_alias_uri}. Error: {e}")
+            logger.error(f"Failed to load MLflow model from tag stage=Production. Error: {e}")
 
             # Fallback to local files if MLflow server load failed
             if self.model is None:

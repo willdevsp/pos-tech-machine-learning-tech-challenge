@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "rocket-tail-shared",
-    "mlflow>=2.0",
+    "mlflow>=3.0",
     "dvc>=3.0",
     "dvc-s3>=3.0"
 ]
