@@ -1,0 +1,54 @@
+name: API Build & Push
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'api/**'
+      - 'shared/**'
+      - '.github/workflows/api.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'api/**'
+      - 'shared/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pytest pytest-cov
+          cd shared && pip install -e .
+          cd ../api && pip install -e .
+      - name: Lint with Ruff
+        run: ruff check api/
+      - name: Run pytest
+        run: cd api && pytest tests/ -v --cov=src
+
+  build-and-push-ecr:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+      - name: Build and push image
+        run: |
+          docker build -t rocket-tail-api:${{ github.sha }} api/
+          docker tag rocket-tail-api:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/rocket-tail-api:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/rocket-tail-api:latest

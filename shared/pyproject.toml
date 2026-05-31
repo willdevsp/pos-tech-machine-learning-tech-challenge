@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rocket-tail-shared"
+version = "1.0.0"
+description = "Shared code package for RocketTail Recommendation System"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.0",
+    "scikit-learn>=1.3",
+    "pandas>=2.0",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "loguru>=0.7"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

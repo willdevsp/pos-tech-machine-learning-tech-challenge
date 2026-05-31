@@ -1,0 +1,10 @@
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "C90"]  # Errors, Flake8, Import sort, Naming, Upgrade, McCabe
+ignore = ["E501"]  # Line too long (handled by line-length format)
+
+[tool.ruff.lint.isort]
+known-first-party = ["rocket_tail_shared", "rocket_tail_training", "rocket_tail_api"]

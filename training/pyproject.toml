@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rocket-tail-training"
+version = "1.0.0"
+description = "Training pipeline for RocketTail Recommendation System"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "rocket-tail-shared",
+    "mlflow>=2.0",
+    "dvc>=3.0",
+    "dvc-s3>=3.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

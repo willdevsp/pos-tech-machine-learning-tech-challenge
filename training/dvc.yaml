@@ -1,0 +1,29 @@
+stages:
+  download:
+    cmd: python src/rocket_tail_training/preprocess.py --stage download
+    outs:
+      - data/raw/events.csv
+  preprocess:
+    cmd: python src/rocket_tail_training/preprocess.py --stage preprocess
+    deps:
+      - data/raw/events.csv
+      - src/rocket_tail_training/preprocess.py
+    outs:
+      - data/processed/cleaned_events.csv
+  feature_engineering:
+    cmd: python src/rocket_tail_training/features.py
+    deps:
+      - data/processed/cleaned_events.csv
+      - src/rocket_tail_training/features.py
+    outs:
+      - data/processed/features.csv
+  train:
+    cmd: python src/rocket_tail_training/train.py
+    deps:
+      - data/processed/features.csv
+      - src/rocket_tail_training/train.py
+    outs:
+      - models/model.pt
+    metrics:
+      - metrics.json:
+          cache: false
