@@ -2,6 +2,15 @@
 
 import json
 import os
+import sys
+
+# Reconfigure stdout/stderr to UTF-8 to prevent encoding errors on Windows when printing emojis (like the mlflow runner emoji)
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 import pandas as pd
 import torch
@@ -126,8 +135,76 @@ def main() -> None:
     with open(preprocessor_path, "rb") as f:
         preprocessor = pickle.load(f)
 
-    # Write metrics
-    metrics = {"loss": 0.05}
+    # Evaluate model and calculate recommendation metrics
+    logger.info("Evaluating model and calculating recommendation metrics...")
+    trained_model.eval()
+
+    from rocket_tail_shared.ml.metrics import precision_at_k, recall_at_k, ndcg_at_k, mean_reciprocal_rank
+
+    unique_users = df["visitorid"].unique()
+    all_items = df["itemid"].unique().tolist()
+
+    precisions = []
+    recalls = []
+    ndcgs = []
+    mrrs = []
+
+    for user_id in unique_users:
+        actual_items = df[df["visitorid"] == user_id]["itemid"].unique().tolist()
+
+        user_candidates = pd.DataFrame({
+            "visitorid": [user_id] * len(all_items),
+            "itemid": all_items,
+        })
+
+        user_feats = df[df["visitorid"] == user_id][["visitorid", "user_activity", "hour"]].drop_duplicates().head(1)
+        if user_feats.empty:
+            user_activity = 0.0
+            hour = 12.0
+        else:
+            user_activity = user_feats["user_activity"].values[0]
+            hour = user_feats["hour"].values[0]
+
+        user_candidates["user_activity"] = user_activity
+        user_candidates["hour"] = hour
+
+        pop_map = df[["itemid", "item_popularity"]].drop_duplicates().set_index("itemid")["item_popularity"].to_dict()
+        user_candidates["item_popularity"] = user_candidates["itemid"].map(pop_map).fillna(0.0)
+
+        u_ids = torch.tensor(user_candidates["visitorid"].values, dtype=torch.long)
+        i_ids = torch.tensor(user_candidates["itemid"].values, dtype=torch.long)
+        c_feats = torch.tensor(user_candidates[["user_activity", "item_popularity", "hour"]].values, dtype=torch.float)
+
+        with torch.no_grad():
+            scores = trained_model(u_ids, i_ids, c_feats).squeeze(1).numpy()
+
+        user_candidates["score"] = scores
+        ranked_items = user_candidates.sort_values(by="score", ascending=False)["itemid"].tolist()
+
+        k = 5
+        precisions.append(precision_at_k(actual_items, ranked_items, k))
+        recalls.append(recall_at_k(actual_items, ranked_items, k))
+        ndcgs.append(ndcg_at_k(actual_items, ranked_items, k))
+        mrrs.append(mean_reciprocal_rank(actual_items, ranked_items))
+
+    avg_precision = sum(precisions) / len(precisions) if precisions else 0.0
+    avg_recall = sum(recalls) / len(recalls) if recalls else 0.0
+    avg_ndcg = sum(ndcgs) / len(ndcgs) if ndcgs else 0.0
+    avg_mrr = sum(mrrs) / len(mrrs) if mrrs else 0.0
+
+    with torch.no_grad():
+        train_outputs = trained_model(user_ids, item_ids, content_features)
+        criterion = nn.MSELoss()
+        real_loss = float(criterion(train_outputs, labels).item())
+
+    metrics = {
+        "loss": real_loss,
+        "precision_at_5": avg_precision,
+        "recall_at_5": avg_recall,
+        "ndcg_at_5": avg_ndcg,
+        "mrr": avg_mrr,
+    }
+
     with open("metrics.json", "w") as f:
         json.dump(metrics, f)
 

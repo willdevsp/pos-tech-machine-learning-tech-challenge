@@ -1,0 +1,61 @@
+schema: '2.0'
+stages:
+  download:
+    cmd: python src/rocket_tail_training/preprocess.py --stage download
+    outs:
+    - path: data/raw/events.csv
+      hash: md5
+      md5: 66261aad7ef0c3c39a2569a38eaff937
+      size: 150
+  preprocess:
+    cmd: python src/rocket_tail_training/preprocess.py --stage preprocess
+    deps:
+    - path: data/raw/events.csv
+      hash: md5
+      md5: 66261aad7ef0c3c39a2569a38eaff937
+      size: 150
+    - path: src/rocket_tail_training/preprocess.py
+      hash: md5
+      md5: 738540b0d6e826c7c9f609ef01c2a4d9
+      size: 3911
+    outs:
+    - path: data/processed/cleaned_events.csv
+      hash: md5
+      md5: ec920cdcd5bab0a5f4e122d5eb97fadd
+      size: 135
+  feature_engineering:
+    cmd: python src/rocket_tail_training/features.py
+    deps:
+    - path: data/processed/cleaned_events.csv
+      hash: md5
+      md5: ec920cdcd5bab0a5f4e122d5eb97fadd
+      size: 135
+    - path: src/rocket_tail_training/features.py
+      hash: md5
+      md5: 52888449bc9a52b777645f148a8be4c2
+      size: 2214
+    outs:
+    - path: data/processed/features.csv
+      hash: md5
+      md5: d1fc1fd9b962155238019db1bc6a7387
+      size: 188
+  train:
+    cmd: python src/rocket_tail_training/train.py
+    deps:
+    - path: data/processed/features.csv
+      hash: md5
+      md5: d1fc1fd9b962155238019db1bc6a7387
+      size: 188
+    - path: src/rocket_tail_training/train.py
+      hash: md5
+      md5: 2897ca18c64c5989c57ac12a343d68c1
+      size: 9768
+    outs:
+    - path: metrics.json
+      hash: md5
+      md5: d4d618d154ac276e58dd0f60b77c5d47
+      size: 146
+    - path: models/model.pt
+      hash: md5
+      md5: 5a449709262b855754e540102b097354
+      size: 471834
