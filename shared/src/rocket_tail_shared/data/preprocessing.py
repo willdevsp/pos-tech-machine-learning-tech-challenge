@@ -1,6 +1,5 @@
 """Data preprocessing using native scikit-learn Pipeline and ColumnTransformer."""
 
-import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
@@ -12,7 +11,7 @@ class PipelineBuilder:
 
     def __init__(self, target_columns: list[str] = None, id_columns: list[str] = None):
         """Initializes the PipelineBuilder.
-        
+
         Args:
             target_columns: Target categorical columns like 'event'.
             id_columns: Identifier columns like 'visitorid', 'itemid'.
@@ -22,7 +21,7 @@ class PipelineBuilder:
 
     def create_preprocessor(self) -> Pipeline:
         """Cria o pipeline de pré-processamento completo.
-        
+
         Returns:
             Pipeline configurado para retornar um Pandas DataFrame.
         """
@@ -33,7 +32,7 @@ class PipelineBuilder:
                 ("encoder", OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)),
             ]
         )
-        
+
         # Transformer para identificadores (preenchimento básico)
         id_transformer = Pipeline(
             steps=[
@@ -53,12 +52,12 @@ class PipelineBuilder:
 
         # Encapsula no Pipeline principal
         pipeline = Pipeline(steps=[("preprocessor", preprocessor)])
-        
+
         # Força a saída a ser um Pandas DataFrame
         try:
             pipeline.set_output(transform="pandas")
         except AttributeError:
             # Compatibilidade com versões muito antigas do sklearn
             pass
-            
+
         return pipeline

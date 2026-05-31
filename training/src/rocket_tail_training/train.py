@@ -164,13 +164,13 @@ def main() -> None:
                 registered_model_name="rocket_tail_model",
             )
             run_id = run.info.run_id
-            
+
             # Set Production alias/tag for the registered model
             from mlflow.tracking import MlflowClient
             client = MlflowClient()
             model_version = client.get_latest_versions("rocket_tail_model", stages=["None"])[0].version
             client.set_registered_model_alias("rocket_tail_model", "Production", model_version)
-            
+
             logger.info(f"Logged custom end-to-end model to MLflow with run ID: {run_id} and set as Production alias")
             # Save run ID to local file for API service loading
             with open("models/latest_run_id.txt", "w") as f:

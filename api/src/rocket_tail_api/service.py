@@ -28,7 +28,7 @@ class RecommendationService:
 
         # Initial synchronous model load
         self._load_model()
-        
+
         # Start background polling thread for dynamic model updates
         self.polling_thread = threading.Thread(target=self._poll_model_updates, daemon=True)
         self.polling_thread.start()
@@ -38,21 +38,21 @@ class RecommendationService:
         try:
             logger.info(f"Attempting to load MLflow model from URI: {self.model_alias_uri}")
             mlflow.pyfunc.set_env({})  # Avoid environment restore issues in this context
-            
+
             # Use MLflow Client to check if there is a new version before downloading the entire model
             from mlflow.tracking import MlflowClient
             try:
                 client = MlflowClient()
                 model_version_details = client.get_model_version_by_alias("rocket_tail_model", "Production")
                 latest_version = model_version_details.version
-                
+
                 if self.current_model_version == latest_version:
                     logger.debug("Model version unchanged. Skipping reload.")
                     return
             except Exception as e:
                 logger.debug(f"Could not check version alias, continuing to load: {e}")
                 latest_version = None
-                
+
             new_model = mlflow.pyfunc.load_model(self.model_alias_uri)
             self.model = new_model
             self.current_model_version = latest_version
@@ -63,7 +63,7 @@ class RecommendationService:
             # Fallback to local files if MLflow server load failed
             if self.model is None:
                 self._load_fallback_model()
-                
+
     def _load_fallback_model(self) -> None:
         """Loads local fallback model."""
         run_id_file = "models/latest_run_id.txt"
@@ -74,7 +74,7 @@ class RecommendationService:
                 run_id = f.read().strip()
                 if run_id:
                     model_uri = f"runs:/{run_id}/model"
-                    
+
         if model_uri:
             try:
                 logger.info(f"Loading local fallback MLflow model from URI: {model_uri}")
