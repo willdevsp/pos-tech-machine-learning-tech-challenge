@@ -32,4 +32,4 @@ jobs:
       - name: Run pytest
         run: cd training && pytest tests/ -v --cov=src
       - name: Test DVC pipeline
-        run: cd training && dvc dag --check
+        run: cd training && dvc dag
